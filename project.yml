@@ -1,0 +1,40 @@
+name: Kotoba
+options:
+  bundleIdPrefix: com.nuki
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+
+targets:
+  Kotoba:
+    type: application
+    platform: macOS
+    sources:
+      - Sources
+    info:
+      path: Info.plist
+      properties:
+        CFBundleName: Kotoba
+        CFBundleDisplayName: Kotoba
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        LSMinimumSystemVersion: "15.0"
+        # Menu bar only — no Dock icon, no main window.
+        LSUIElement: true
+    entitlements:
+      path: Kotoba.entitlements
+      properties:
+        # Accessibility monitoring and a sandbox do not get along. This is a
+        # personal tool, not an App Store app.
+        com.apple.security.app-sandbox: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nuki.Kotoba
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        SWIFT_STRICT_CONCURRENCY: targeted
+        ENABLE_HARDENED_RUNTIME: YES
+        # Fill in your Team ID, or set signing to "Sign to Run Locally" in Xcode.
+        DEVELOPMENT_TEAM: "D56G7B2W2N"
+        CODE_SIGN_STYLE: Automatic
