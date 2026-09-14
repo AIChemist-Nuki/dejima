@@ -1,4 +1,4 @@
-name: Kotoba
+name: Dejima
 options:
   bundleIdPrefix: com.nuki
   deploymentTarget:
@@ -6,7 +6,7 @@ options:
   createIntermediateGroups: true
 
 targets:
-  Kotoba:
+  Dejima:
     type: application
     platform: macOS
     sources:
@@ -14,22 +14,22 @@ targets:
     info:
       path: Info.plist
       properties:
-        CFBundleName: Kotoba
-        CFBundleDisplayName: Kotoba
+        CFBundleName: Dejima
+        CFBundleDisplayName: Dejima
         CFBundleShortVersionString: "0.1.0"
         CFBundleVersion: "1"
         LSMinimumSystemVersion: "15.0"
         # Menu bar only — no Dock icon, no main window.
         LSUIElement: true
     entitlements:
-      path: Kotoba.entitlements
+      path: Dejima.entitlements
       properties:
         # Accessibility monitoring and a sandbox do not get along. This is a
         # personal tool, not an App Store app.
         com.apple.security.app-sandbox: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.nuki.Kotoba
+        PRODUCT_BUNDLE_IDENTIFIER: com.nuki.Dejima
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"

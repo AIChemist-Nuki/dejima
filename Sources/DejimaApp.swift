@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct KotobaApp: App {
+struct DejimaApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     var body: some Scene {

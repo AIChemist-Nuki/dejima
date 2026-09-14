@@ -96,7 +96,7 @@ final class Controller: ObservableObject {
         panel?.show(near: NSEvent.mouseLocation)
 
         guard let route else {
-            result.fail(KotobaError.noRoute)
+            result.fail(DejimaError.noRoute)
             return
         }
 
@@ -133,13 +133,13 @@ final class Controller: ObservableObject {
     }
 }
 
-enum KotobaError: LocalizedError {
+enum DejimaError: LocalizedError {
     case noRoute
 
     var errorDescription: String? {
         switch self {
         case .noRoute:
-            return "Kotoba couldn't tell what language this is. Pick a source language in the menu and copy again."
+            return "Dejima couldn't tell what language this is. Pick a source language in the menu and copy again."
         }
     }
 }

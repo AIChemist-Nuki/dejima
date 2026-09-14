@@ -41,7 +41,7 @@ struct MenuBarView: View {
         Divider()
 
         Button("Check language models…") { openTranslationSettings() }
-        Button("Quit Kotoba") { NSApp.terminate(nil) }
+        Button("Quit Dejima") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }
 
