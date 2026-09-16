@@ -43,10 +43,13 @@ final class ResultPanel {
     private let panel: NSPanel
     private var dismissMonitor: Any?
 
-    private let size = CGSize(width: 380, height: 240)
+    /// Where the pointer was when the panel was last shown. The panel hangs off
+    /// this point, so it has to survive the resizes that follow.
+    private var anchor: NSPoint = .zero
 
     init(model: ResultModel) {
-        panel = NSPanel(contentRect: NSRect(origin: .zero, size: size),
+        let initial = CGSize(width: ResultView.Layout.width, height: ResultView.Layout.minHeight)
+        panel = NSPanel(contentRect: NSRect(origin: .zero, size: initial),
                         styleMask: [.nonactivatingPanel, .titled, .closable, .fullSizeContentView, .utilityWindow],
                         backing: .buffered,
                         defer: false)
@@ -61,11 +64,14 @@ final class ResultPanel {
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
-        panel.contentView = NSHostingView(rootView: ResultView(model: model))
+        panel.contentView = NSHostingView(rootView: ResultView(model: model) { [weak self] height in
+            self?.fit(contentHeight: height)
+        })
     }
 
     func show(near point: NSPoint) {
-        panel.setFrameTopLeftPoint(clamp(point))
+        anchor = point
+        place(height: panel.frame.height)
         panel.orderFrontRegardless()
         installDismissMonitor()
     }
@@ -75,17 +81,29 @@ final class ResultPanel {
         removeDismissMonitor()
     }
 
-    /// Keep the whole panel inside the screen the pointer is on.
-    private func clamp(_ point: NSPoint) -> NSPoint {
-        let screen = NSScreen.screens.first { $0.frame.contains(point) } ?? NSScreen.main
-        guard let visible = screen?.visibleFrame else { return point }
+    // MARK: - Geometry
 
-        var origin = NSPoint(x: point.x + 12, y: point.y - 12)
-        origin.x = min(origin.x, visible.maxX - size.width - 8)
-        origin.x = max(origin.x, visible.minX + 8)
-        origin.y = max(origin.y, visible.minY + size.height + 8)
-        origin.y = min(origin.y, visible.maxY - 8)
-        return origin
+    /// Matches the window to the height its content actually wants.
+    private func fit(contentHeight: CGFloat) {
+        let target = ResultView.Layout.height(forContent: contentHeight)
+        guard abs(target - panel.frame.height) > 0.5 else { return }
+        place(height: target)
+    }
+
+    /// Hangs the panel below and right of the anchor at the given height,
+    /// nudged as needed to keep all of it on the screen the pointer is on.
+    private func place(height: CGFloat) {
+        let width = ResultView.Layout.width
+        var origin = NSPoint(x: anchor.x + 12, y: anchor.y - 12 - height)
+
+        let screen = NSScreen.screens.first { $0.frame.contains(anchor) } ?? NSScreen.main
+        if let visible = screen?.visibleFrame {
+            origin.x = min(origin.x, visible.maxX - width - 8)
+            origin.x = max(origin.x, visible.minX + 8)
+            origin.y = min(origin.y, visible.maxY - height - 8)
+            origin.y = max(origin.y, visible.minY + 8)
+        }
+        panel.setFrame(NSRect(origin: origin, size: CGSize(width: width, height: height)), display: true)
     }
 
     // MARK: - Dismissal

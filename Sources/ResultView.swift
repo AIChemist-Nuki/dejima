@@ -6,9 +6,31 @@ import SwiftUI
 /// were reading, so it should read like a caption, not an app.
 struct ResultView: View {
     @ObservedObject var model: ResultModel
+    /// Reports the ideal height of the scrollable content so the window can
+    /// size itself to the translation instead of to a guess.
+    var onContentHeightChange: (CGFloat) -> Void
+
+    /// Sizes shared with `ResultPanel`, which owns the window.
+    enum Layout {
+        /// Fixed. Text needs a stable measure to wrap against, and a panel that
+        /// changed width per result would jitter as chunks stream in.
+        static let width: CGFloat = 380
+        static let padding: CGFloat = 16
+        static let headerHeight: CGFloat = 20
+        static let headerSpacing: CGFloat = 12
+        static let minHeight: CGFloat = 96
+        static let maxHeight: CGFloat = 520
+
+        /// Everything in the window that isn't the scrollable content.
+        static var chrome: CGFloat { padding * 2 + headerHeight + headerSpacing }
+
+        static func height(forContent content: CGFloat) -> CGFloat {
+            min(max(content + chrome, minHeight), maxHeight)
+        }
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Layout.headerSpacing) {
             header
 
             ScrollView {
@@ -21,10 +43,15 @@ struct ResultView: View {
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                // Inside a ScrollView this stack is laid out at its ideal
+                // height, which is exactly what the window wants to know.
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                    onContentHeightChange(height)
+                }
             }
             .scrollBounceBehavior(.basedOnSize)
         }
-        .padding(16)
+        .padding(Layout.padding)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(.regularMaterial)
     }
@@ -52,6 +79,7 @@ struct ResultView: View {
                 .help("Copy translation")
             }
         }
+        .frame(height: Layout.headerHeight)
     }
 
     @ViewBuilder
