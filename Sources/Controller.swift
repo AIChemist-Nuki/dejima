@@ -86,7 +86,10 @@ final class Controller: ObservableObject {
     }
 
     private func handle(_ text: String) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Copied from a PDF, the text arrives broken at the margin. Repair it
+        // before anything else looks at it: language detection, the translator
+        // and the original shown in the panel all want the real paragraphs.
+        let trimmed = TextCleaner.unwrap(text).trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
         currentJob?.cancel()
