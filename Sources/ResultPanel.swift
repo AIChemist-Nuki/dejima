@@ -5,6 +5,10 @@ import SwiftUI
 final class ResultModel: ObservableObject {
     enum State {
         case translating
+        /// Some chunks are in, the rest are still coming.
+        case streaming(String)
+        /// Fully translated; the refiner is having a second pass at it.
+        case refining(String)
         case done(String)
         case failed(String)
     }
@@ -12,6 +16,18 @@ final class ResultModel: ObservableObject {
     @Published var sourceText = ""
     @Published var state: State = .translating
     @Published var routeLabel = ""
+
+    /// Text worth putting on the pasteboard: a finished translation, or the
+    /// draft while the refiner works on it. A half-streamed result is left out
+    /// — copying it would silently hand over a truncated translation.
+    var copyableText: String? {
+        switch state {
+        case .done(let text), .refining(let text):
+            return text
+        case .translating, .streaming, .failed:
+            return nil
+        }
+    }
 
     func begin(source: String, route: Route?) {
         sourceText = source
@@ -24,6 +40,12 @@ final class ResultModel: ObservableObject {
         } else {
             routeLabel = ""
         }
+    }
+
+    func stream(_ text: String) { state = .streaming(text) }
+
+    func beginRefining() {
+        if case .streaming(let text) = state { state = .refining(text) }
     }
 
     func succeed(_ text: String) { state = .done(text) }

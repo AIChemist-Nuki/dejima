@@ -25,6 +25,9 @@ final class Controller: ObservableObject {
     private var host: TranslationHostWindow?
     private var panel: ResultPanel?
     private var currentJob: Task<Void, Never>?
+    /// Bumped per request. A superseded translation can still be mid-chunk
+    /// inside the hub, and its partial results must not land in the panel.
+    private var generation = 0
 
     func start() {
         // The translationTask host must live in a window that is actually on
@@ -93,6 +96,8 @@ final class Controller: ObservableObject {
         guard !trimmed.isEmpty else { return }
 
         currentJob?.cancel()
+        generation += 1
+        let job = generation
 
         let route = LanguageRouter.route(for: trimmed)
         result.begin(source: trimmed, route: route)
@@ -103,12 +108,16 @@ final class Controller: ObservableObject {
             return
         }
 
-        currentJob = Task { [hub, result] in
+        currentJob = Task { [weak self, hub, result] in
             do {
                 var output = try await hub.translate(trimmed,
                                                      from: route.source,
-                                                     to: route.target)
+                                                     to: route.target) { partial in
+                    guard self?.generation == job else { return }
+                    result.stream(partial)
+                }
                 if Polisher.isEnabled {
+                    result.beginRefining()
                     output = await Polisher.polish(original: trimmed,
                                                    draft: output,
                                                    target: route.target)
@@ -125,7 +134,7 @@ final class Controller: ObservableObject {
     }
 
     func copyResult() {
-        guard case .done(let text) = result.state else { return }
+        guard let text = result.copyableText else { return }
         let pb = NSPasteboard.general
         pb.clearContents()
         pb.setString(text, forType: .string)

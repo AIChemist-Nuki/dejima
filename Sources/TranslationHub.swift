@@ -14,18 +14,22 @@ final class TranslationHub: ObservableObject {
 
     private struct Job {
         let text: String
+        let onPartial: @MainActor (String) -> Void
         let continuation: CheckedContinuation<String, Error>
     }
     private var pending: Job?
 
+    /// - Parameter onPartial: Called with everything translated so far each
+    ///   time a chunk lands, so long text can appear a paragraph at a time.
     func translate(_ text: String,
                    from source: Locale.Language?,
-                   to target: Locale.Language) async throws -> String {
+                   to target: Locale.Language,
+                   onPartial: @escaping @MainActor (String) -> Void) async throws -> String {
         pending?.continuation.resume(throwing: CancellationError())
         pending = nil
 
         return try await withCheckedThrowingContinuation { continuation in
-            pending = Job(text: text, continuation: continuation)
+            pending = Job(text: text, onPartial: onPartial, continuation: continuation)
 
             if configuration?.source == source, configuration?.target == target {
                 // Same pair as last time: the configuration compares equal and
@@ -46,6 +50,7 @@ final class TranslationHub: ObservableObject {
             for chunk in Self.chunk(job.text) {
                 let response = try await session.translate(chunk)
                 parts.append(response.targetText)
+                job.onPartial(parts.joined(separator: "\n\n"))
             }
             job.continuation.resume(returning: parts.joined(separator: "\n\n"))
         } catch {

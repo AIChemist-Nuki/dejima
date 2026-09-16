@@ -67,7 +67,7 @@ struct ResultView: View {
 
             Spacer()
 
-            if case .done(let text) = model.state {
+            if let text = model.copyableText {
                 Button {
                     let pasteboard = NSPasteboard.general
                     pasteboard.clearContents()
@@ -86,17 +86,22 @@ struct ResultView: View {
     private var output: some View {
         switch model.state {
         case .translating:
-            HStack(spacing: 8) {
-                ProgressView().controlSize(.small)
-                Text("Translating…").foregroundStyle(.secondary)
+            activity("Translating…")
+
+        case .streaming(let text):
+            VStack(alignment: .leading, spacing: 10) {
+                translation(text)
+                activity("Translating the rest…")
             }
-            .font(.body)
+
+        case .refining(let text):
+            VStack(alignment: .leading, spacing: 10) {
+                translation(text)
+                activity("Refining…")
+            }
 
         case .done(let text):
-            Text(text)
-                .font(.system(size: 15))
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            translation(text)
 
         case .failed(let message):
             VStack(alignment: .leading, spacing: 6) {
@@ -108,5 +113,20 @@ struct ResultView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private func translation(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 15))
+            .textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func activity(_ label: String) -> some View {
+        HStack(spacing: 8) {
+            ProgressView().controlSize(.small)
+            Text(label).foregroundStyle(.secondary)
+        }
+        .font(.body)
     }
 }
