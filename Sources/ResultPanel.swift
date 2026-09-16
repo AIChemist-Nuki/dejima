@@ -16,6 +16,9 @@ final class ResultModel: ObservableObject {
     @Published var sourceText = ""
     @Published var state: State = .translating
     @Published var routeLabel = ""
+    /// A pinned panel ignores clicks outside itself and stays where it is when
+    /// the next translation arrives.
+    @Published var isPinned = false
 
     /// Text worth putting on the pasteboard: a finished translation, or the
     /// draft while the refiner works on it. A half-streamed result is left out
@@ -63,6 +66,7 @@ final class ResultModel: ObservableObject {
 @MainActor
 final class ResultPanel {
     private let panel: NSPanel
+    private let model: ResultModel
     private var dismissMonitor: Any?
 
     /// Where the pointer was when the panel was last shown. The panel hangs off
@@ -70,6 +74,7 @@ final class ResultPanel {
     private var anchor: NSPoint = .zero
 
     init(model: ResultModel) {
+        self.model = model
         let initial = CGSize(width: ResultView.Layout.width, height: ResultView.Layout.minHeight)
         panel = NSPanel(contentRect: NSRect(origin: .zero, size: initial),
                         styleMask: [.nonactivatingPanel, .titled, .closable, .fullSizeContentView, .utilityWindow],
@@ -86,14 +91,23 @@ final class ResultPanel {
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
-        panel.contentView = NSHostingView(rootView: ResultView(model: model) { [weak self] height in
-            self?.fit(contentHeight: height)
-        })
+        // The traffic light lands right on top of the language badge. The
+        // header carries its own close button instead, which a pinned panel
+        // needs anyway now that clicking away no longer dismisses it.
+        panel.standardWindowButton(.closeButton)?.isHidden = true
+        panel.contentView = NSHostingView(rootView: ResultView(
+            model: model,
+            onContentHeightChange: { [weak self] height in self?.fit(contentHeight: height) },
+            onClose: { [weak self] in self?.hide() }
+        ))
     }
 
     func show(near point: NSPoint) {
-        anchor = point
-        place(height: panel.frame.height)
+        // A pinned panel was put somewhere on purpose; leave it there.
+        if !model.isPinned {
+            anchor = point
+            place(height: panel.frame.height)
+        }
         panel.orderFrontRegardless()
         installDismissMonitor()
     }
@@ -101,6 +115,9 @@ final class ResultPanel {
     func hide() {
         panel.orderOut(nil)
         removeDismissMonitor()
+        // Pinning applies to the result you pinned. Keeping it on would make
+        // the next translation appear at the old spot for no clear reason.
+        model.isPinned = false
     }
 
     // MARK: - Geometry
@@ -109,7 +126,17 @@ final class ResultPanel {
     private func fit(contentHeight: CGFloat) {
         let target = ResultView.Layout.height(forContent: contentHeight)
         guard abs(target - panel.frame.height) > 0.5 else { return }
-        place(height: target)
+
+        guard model.isPinned else {
+            place(height: target)
+            return
+        }
+        // Pinned: the panel may have been dragged deliberately, so grow from
+        // where it stands rather than snapping back to the pointer.
+        var frame = panel.frame
+        frame.origin.y += frame.height - target
+        frame.size.height = target
+        panel.setFrame(frame, display: true)
     }
 
     /// Hangs the panel below and right of the anchor at the given height,
@@ -138,8 +165,8 @@ final class ResultPanel {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 if event.type == .keyDown {
-                    if event.keyCode == 53 { self.hide() }  // esc
-                } else {
+                    if event.keyCode == 53 { self.hide() }  // esc closes either way
+                } else if !self.model.isPinned {
                     self.hide()
                 }
             }

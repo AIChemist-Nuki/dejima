@@ -9,6 +9,7 @@ struct ResultView: View {
     /// Reports the ideal height of the scrollable content so the window can
     /// size itself to the translation instead of to a guess.
     var onContentHeightChange: (CGFloat) -> Void
+    var onClose: () -> Void
 
     /// Sizes shared with `ResultPanel`, which owns the window.
     enum Layout {
@@ -75,10 +76,24 @@ struct ResultView: View {
                 } label: {
                     Image(systemName: "doc.on.doc")
                 }
-                .buttonStyle(.borderless)
                 .help("Copy translation")
             }
+
+            Button {
+                model.isPinned.toggle()
+            } label: {
+                Image(systemName: model.isPinned ? "pin.fill" : "pin")
+            }
+            .foregroundStyle(model.isPinned ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+            .help(model.isPinned ? "Unpin" : "Keep the panel open when you click elsewhere")
+
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+            }
+            .help("Close")
         }
+        .buttonStyle(.borderless)
+        .font(.system(size: 11, weight: .medium))
         .frame(height: Layout.headerHeight)
     }
 
