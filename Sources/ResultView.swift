@@ -32,7 +32,7 @@ struct ResultView: View {
     private var header: some View {
         HStack(spacing: 8) {
             Text(model.routeLabel)
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)

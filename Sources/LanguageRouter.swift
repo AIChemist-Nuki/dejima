@@ -54,6 +54,25 @@ enum LanguageRouter {
         Locale.current.localizedString(forIdentifier: identifier) ?? identifier
     }
 
+    /// Human-readable name for a language, for the badge on the result panel.
+    ///
+    /// The region is always dropped — `zh-Hans-CN` is noise. The script is kept
+    /// only when it tells you something: `Locale.Language` fills in a default
+    /// script for every code, so blindly including it turns Japanese into
+    /// "Japanese (Japanese)", while dropping it would make Traditional and
+    /// Simplified Chinese indistinguishable.
+    static func displayName(_ language: Locale.Language) -> String {
+        guard let code = language.languageCode?.identifier else {
+            return language.minimalIdentifier
+        }
+        var identifier = code
+        let defaultScript = Locale.Language(identifier: code).script?.identifier
+        if let script = language.script?.identifier, script != defaultScript {
+            identifier += "-\(script)"
+        }
+        return Locale.current.localizedString(forIdentifier: identifier) ?? identifier
+    }
+
     /// Languages worth offering in the menu. Apple supports more; trim or extend
     /// to taste.
     static let choices = ["zh-Hans", "zh-Hant", "ja", "en", "ko", "de", "fr", "es", "ru"]

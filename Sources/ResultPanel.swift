@@ -17,8 +17,10 @@ final class ResultModel: ObservableObject {
         sourceText = source
         state = .translating
         if let route {
-            let from = route.source?.maximalIdentifier ?? "auto"
-            routeLabel = "\(from) → \(route.target.maximalIdentifier)"
+            let to = LanguageRouter.displayName(route.target)
+            // With no detected source the framework picks one, so naming a
+            // source here would be a guess. Just show where it's going.
+            routeLabel = route.source.map { "\(LanguageRouter.displayName($0)) → \(to)" } ?? "→ \(to)"
         } else {
             routeLabel = ""
         }
