@@ -1,15 +1,18 @@
-# XcodeGen 生成,不入库
-Kotoba.xcodeproj/
+# XcodeGen 生成，不入库。project.yml 才是工程的源。
+Dejima.xcodeproj/
 
 # Xcode
 DerivedData/
 build/
 xcuserdata/
 *.xcuserstate
-
-# macOS
-.DS_Store
+*.xcscmblueprint
+*.xccheckout
 
 # Swift
 .build/
 .swiftpm/
+Package.resolved
+
+# macOS
+.DS_Store
