@@ -24,7 +24,6 @@ final class Controller: ObservableObject {
     @Published private(set) var hasAccessibility = false
 
     private let monitor = DoubleCopyMonitor()
-    private var host: TranslationHostWindow?
     private var panel: ResultPanel?
     private var currentJob: Task<Void, Never>?
     /// Bumped per request. A superseded translation can still be mid-chunk
@@ -32,9 +31,9 @@ final class Controller: ObservableObject {
     private var generation = 0
 
     func start() {
-        // The translationTask host must live in a window that is actually on
-        // screen, otherwise SwiftUI never runs the task and no session arrives.
-        host = TranslationHostWindow(hub: hub)
+        // Whatever the hub needs to be ready. The macOS 15 build puts a hidden
+        // window on screen here; the macOS 26 build does nothing.
+        hub.start()
         panel = ResultPanel(model: result)
 
         monitor.onDoubleCopy = { [weak self] text in

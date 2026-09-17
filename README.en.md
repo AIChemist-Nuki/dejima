@@ -21,6 +21,21 @@ Staying offline is a hard requirement. Your clipboard holds unpublished drafts, 
 | Accessibility permission | Required, to watch for ⌘C |
 | Apple Intelligence | Optional, only for the refine pass, and needs macOS 26 or later |
 
+## Which build to download
+
+There are two, identical in features. The only difference is how they ask the system for a translation session.
+
+| | **Dejima** | **Dejima 26** |
+|---|---|---|
+| Requires | macOS 15+ | macOS 26+ |
+| Gets its session from | a hidden 1×1 window carrying SwiftUI's `.translationTask` | `TranslationSession(installedSource:target:)`, directly |
+| With a language pack missing | the system's download prompt | an error pointing at the menu item that installs them |
+| When the language can't be identified | leaves the source for the framework to guess | commits to the best guess available |
+
+**Below macOS 26, Dejima is the only option.** At 26 and above either works; Dejima 26 spares you a hidden window parked in the corner of the screen, at the cost of the two behaviour differences above. Neither matters day to day, but the first build is easier to live with while you're still downloading models.
+
+Both share a bundle identifier, so moving from one to the other keeps your Accessibility grant, login item and settings.
+
 ## Building
 
 With XcodeGen:
@@ -31,7 +46,14 @@ xcodegen generate
 open Dejima.xcodeproj
 ```
 
-Then ⌘R.
+Xcode's scheme picker will offer `Dejima` and `Dejima26`; choose one and ⌘R. From the command line:
+
+```bash
+xcodebuild -scheme Dejima   -configuration Release build   # macOS 15+
+xcodebuild -scheme Dejima26 -configuration Release build   # macOS 26+
+```
+
+`Dejima26` builds to `Dejima26.app` purely so the two targets don't overwrite each other — rename it to `Dejima.app` when packaging a release, since the bundle already calls itself Dejima.
 
 `DEVELOPMENT_TEAM` in `project.yml` is the author's own Team ID. Replace it with yours, or switch to "Sign to Run Locally" under Signing & Capabilities in Xcode.
 
@@ -41,7 +63,7 @@ Without XcodeGen, set it up by hand:
 
 1. Xcode → New Project → macOS → App, Interface: SwiftUI, name it `Dejima`
 2. Delete the generated `ContentView.swift` and `DejimaApp.swift`
-3. Drag in the 9 files from `Sources/`
+3. Drag in the 11 files at the root of `Sources/`, plus **one** of `TranslationLegacy/` or `Translation26/` (macOS 15 and 26 respectively)
 4. Target → Info, add `Application is agent (UIElement)` = `YES`
 5. Target → Signing & Capabilities, **remove App Sandbox** (the sandbox and global key monitoring don't get along)
 
@@ -108,7 +130,7 @@ Four things that aren't obvious, all also noted in the code:
 
 **The pasteboard has to be polled.** When the second ⌘C is observed, the keystroke hasn't reached the frontmost app yet, so the pasteboard still holds the old value. Dejima records `changeCount`, then checks every 20 ms for up to 300 ms. The window for the second press defaults to 0.45 s (`doublePressWindow` in `UserDefaults`).
 
-**There's a hidden 1×1 window.** A `TranslationSession` is only handed to you inside SwiftUI's `.translationTask` modifier — there is no "give me a session" call. A menu bar app has no natural view to hang that on, so a fully transparent 1×1 window sits permanently in the corner of the screen. It has to be genuinely on screen: `orderOut` or moving it off-screen makes SwiftUI treat the view as never having appeared, and the task never runs. Also, translating the same language pair twice produces an equal configuration that SwiftUI would skip, so `invalidate()` has to be called explicitly.
+**There's a hidden 1×1 window** (macOS 15 build only; the 26 build doesn't need one — see the comparison above)**.** A `TranslationSession` is only handed to you inside SwiftUI's `.translationTask` modifier — there is no "give me a session" call. A menu bar app has no natural view to hang that on, so a fully transparent 1×1 window sits permanently in the corner of the screen. It has to be genuinely on screen: `orderOut` or moving it off-screen makes SwiftUI treat the view as never having appeared, and the task never runs. Also, translating the same language pair twice produces an equal configuration that SwiftUI would skip, so `invalidate()` has to be called explicitly.
 
 **The panel doesn't steal focus.** The `NSPanel` carries `.nonactivatingPanel`, so showing it doesn't pull focus away from whatever you were reading and your caret stays put. Its position is clamped to keep the whole window on the screen the pointer is on.
 
@@ -122,7 +144,8 @@ Long text is split into 1200-character chunks along paragraph boundaries, transl
 | `Controller` | `AppDelegate` plus the wiring: permission, monitor toggling, translation orchestration |
 | `DoubleCopyMonitor` | Global key monitoring, double-press detection, pasteboard reading |
 | `LanguageRouter` | Language detection and direction decisions |
-| `TranslationHub` | Wraps Apple's view-bound API as a plain `async` function; owns the hidden host window and the chunking |
+| `TranslationLegacy/TranslationHub` | macOS 15 build: wraps Apple's view-bound API as a plain `async` function; owns the hidden host window |
+| `Translation26/TranslationHub` | macOS 26 build: creates a session directly. Same API, no window |
 | `Polisher` | Optional Apple Intelligence refinement |
 | `TextCleaner` | Repairs hard line breaks from PDF copies |
 | `LoginItem` | Launch at login |
