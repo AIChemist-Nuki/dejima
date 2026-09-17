@@ -8,6 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         controller.start()
+        // No-op unless the person opted in, and at most once a day.
+        Updater.checkInBackgroundIfDue()
     }
 }
 

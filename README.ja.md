@@ -1,6 +1,6 @@
 # Dejima
 
-テキストを選択して ⌘C を2回。訳文がポインタの横に浮かびます。処理はすべてローカル、ネットには出ません。
+テキストを選択して ⌘C を2回。訳文がポインタの横に浮かびます。翻訳はすべて端末内で完結し、サーバーを経由しません。
 
 [简体中文](README.md) · [English](README.en.md)
 
@@ -64,6 +64,9 @@ XcodeGen なしで手動で作る場合：
 | `Translate into` | 主言語。既定は簡体中国語 |
 | `Unless it already is, then` | すでに主言語だった場合の訳先。既定は日本語 |
 | `Refine with Apple Intelligence` | 任意の二段目の推敲。既定はオフ。対応端末でのみ表示されます |
+| `Open at login` | ログイン時に自動で起動します |
+| `Check for updates automatically` | 1日1回まで GitHub に最新版を問い合わせます。**既定はオフ** |
+| `Check for updates…` | その場で1回だけ確認します |
 | `Check language models…` | システム設定の「翻訳言語」パネルを開き、モデルを管理します |
 | `Quit Dejima` (⌘Q) | 終了 |
 
@@ -84,6 +87,18 @@ XcodeGen なしで手動で作る場合：
 言語判定は `NLLanguageRecognizer` です。短い文に対する推測は信用できないので、確信度が 0.4 を超えるか、文字数が 12 を超える場合にのみ判定を採用し、それ以外は「判定できなかった」扱いにしています。方向の判定上、`zh-Hans` と `zh` は同じ言語として扱います。
 
 選べる言語は `LanguageRouter.choices` にあり、現在は簡体・繁体中国語、日本語、英語、韓国語、ドイツ語、フランス語、スペイン語、ロシア語です。Apple はもっと多くに対応しているので、好みで増減してください。
+
+## 通信について
+
+**翻訳した内容がこの端末から出ることはありません。** 翻訳はローカルの Translation フレームワーク、推敲はオンデバイスの Apple Intelligence で、どちらも通信しません。
+
+アプリ全体で通信するのは1か所だけ、更新確認です。GitHub の releases API に最新のバージョン番号を尋ねます。
+
+- `Check for updates…` は選んだときに1回だけ送ります
+- `Check for updates automatically` は**既定でオフ**。オンにすると起動時、1日1回までの確認になります
+- リクエストには HTTP そのもの以外何も乗りません。識別子も、利用状況も、まして翻訳したテキストも送りません
+
+コードは `Sources/Updater.swift`、180行足らずなので一度目を通せます。不要なら両方オフのままにするか、ファイルごと削除してください。
 
 ## 仕組み
 
@@ -109,6 +124,9 @@ XcodeGen なしで手動で作る場合：
 | `LanguageRouter` | 言語判定と翻訳方向の決定 |
 | `TranslationHub` | Apple のビュー束縛 API を素の `async` 関数に包む。隠しホストウィンドウと分割処理もここ |
 | `Polisher` | 任意の Apple Intelligence による推敲 |
+| `TextCleaner` | PDF からのコピーで入る強制改行の修復 |
+| `LoginItem` | ログイン時の自動起動 |
+| `Updater` | 更新確認。アプリ内で唯一の通信箇所 |
 | `ResultPanel` | `ResultModel` とフォーカスを奪わないフローティングパネル |
 | `ResultView` | パネルの中身：訳文を上、原文を下に |
 | `MenuBarView` | メニューの中身 |

@@ -9,6 +9,7 @@ struct MenuBarView: View {
     /// Mirrors the Service Management status, which is the real source of
     /// truth — the system can revoke this from Login Items at any time.
     @State private var launchAtLogin = LoginItem.isEnabled
+    @State private var autoUpdate = Updater.checksAutomatically
 
     var body: some View {
         if !controller.hasAccessibility {
@@ -55,6 +56,12 @@ struct MenuBarView: View {
             Button("Approve in Login Items…") { LoginItem.openSettings() }
         }
 
+        Toggle("Check for updates automatically", isOn: $autoUpdate)
+            .onChange(of: autoUpdate) { _, on in Updater.checksAutomatically = on }
+
+        Divider()
+
+        Button("Check for updates…") { Updater.checkNow() }
         Button("Check language models…") { openTranslationSettings() }
         Button("Quit Dejima") { NSApp.terminate(nil) }
             .keyboardShortcut("q")

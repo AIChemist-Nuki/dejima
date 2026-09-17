@@ -1,6 +1,6 @@
 # Dejima
 
-Select text, press ⌘C twice, and the translation appears next to your pointer. Everything runs locally; nothing leaves the machine.
+Select text, press ⌘C twice, and the translation appears next to your pointer. Translation happens entirely on device — nothing you translate goes through a server.
 
 [简体中文](README.md) · [日本語](README.ja.md)
 
@@ -64,6 +64,9 @@ Without a model, the first translation triggers the system's download prompt —
 | `Translate into` | Your primary language, Simplified Chinese by default |
 | `Unless it already is, then` | Where to go when the text is already in the primary language. Japanese by default |
 | `Refine with Apple Intelligence` | Optional second pass, off by default. Only appears if the device supports it |
+| `Open at login` | Start Dejima when you log in |
+| `Check for updates automatically` | Asks GitHub for the latest version at most once a day. **Off by default** |
+| `Check for updates…` | Check once, now |
 | `Check language models…` | Opens the Translation Languages pane to download and manage models |
 | `Quit Dejima` (⌘Q) | Quit |
 
@@ -84,6 +87,18 @@ So Japanese and English both become Chinese, while Chinese becomes Japanese. Rea
 Detection uses `NLLanguageRecognizer`. Its guesses on short strings aren't trustworthy, so there's a gate: the result counts only if confidence is above 0.4 or the text is longer than 12 characters. Otherwise it's treated as "couldn't tell". For routing purposes, `zh-Hans` and `zh` are the same language.
 
 The offered languages live in `LanguageRouter.choices` — currently Simplified and Traditional Chinese, Japanese, English, Korean, German, French, Spanish, and Russian. Apple supports more; trim or extend to taste.
+
+## What touches the network
+
+**Nothing you translate ever leaves the machine.** Translation goes through the local Translation framework, refinement through on-device Apple Intelligence. Neither one connects to anything.
+
+Exactly one thing in the app makes a network request: the update check, which asks GitHub's releases API for the latest version number.
+
+- `Check for updates…` fires once, when you pick it
+- `Check for updates automatically` is **off by default**; turned on, it looks at most once a day, at launch
+- The request carries nothing beyond the HTTP call itself — no identifier, no usage, and certainly none of your text
+
+The code is in `Sources/Updater.swift`, under 180 lines, and reads in one sitting. If you'd rather not have it, leave both settings off or delete the file.
 
 ## How it works
 
@@ -109,6 +124,9 @@ Long text is split into 1200-character chunks along paragraph boundaries, transl
 | `LanguageRouter` | Language detection and direction decisions |
 | `TranslationHub` | Wraps Apple's view-bound API as a plain `async` function; owns the hidden host window and the chunking |
 | `Polisher` | Optional Apple Intelligence refinement |
+| `TextCleaner` | Repairs hard line breaks from PDF copies |
+| `LoginItem` | Launch at login |
+| `Updater` | The update check — the only networking in the app |
 | `ResultPanel` | `ResultModel` plus the non-activating floating panel |
 | `ResultView` | Panel contents: translation on top, original underneath |
 | `MenuBarView` | Menu contents |
