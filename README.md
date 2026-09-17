@@ -21,6 +21,21 @@
 | 辅助功能权限 | 必须，用于监听 ⌘C |
 | Apple Intelligence | 可选，仅「润色」功能需要，且要 macOS 26 以上 |
 
+## 下载哪个版本
+
+有两个构建，功能一样，区别只在怎么向系统要一个翻译会话。
+
+| | **Dejima** | **Dejima 26** |
+|---|---|---|
+| 系统要求 | macOS 15 以上 | macOS 26 以上 |
+| 会话来源 | 藏一个 1×1 窗口，从 SwiftUI 的 `.translationTask` 里拿 | `TranslationSession(installedSource:target:)` 直接创建 |
+| 语言包没装时 | 弹系统下载框 | 直接报错，提示去菜单里下载 |
+| 语种识别不出时 | 交给框架自己判断源语言 | 采用置信度最低的那个猜测 |
+
+**macOS 26 以下只能用 Dejima。** 26 以上两个都能跑，装 Dejima 26 会少一个常驻屏幕角落的隐藏窗口，代价是上面那两条行为差异——都不影响日常使用，但模型没下全的时候前者更省事。
+
+两个包的 bundle ID 是同一个，所以从一个换到另一个，辅助功能授权、开机启动和设置都会保留。
+
 ## 构建
 
 装了 XcodeGen 的话：
@@ -31,7 +46,14 @@ xcodegen generate
 open Dejima.xcodeproj
 ```
 
-然后 ⌘R。
+Xcode 的 scheme 选择器里会有 `Dejima` 和 `Dejima26` 两个，选一个 ⌘R。命令行则是：
+
+```bash
+xcodebuild -scheme Dejima   -configuration Release build   # macOS 15+
+xcodebuild -scheme Dejima26 -configuration Release build   # macOS 26+
+```
+
+`Dejima26` 的产物叫 `Dejima26.app`，只是为了两个 target 不互相覆盖；打包发布时改回 `Dejima.app` 就行，bundle 里的名字本来就是 Dejima。
 
 `project.yml` 里的 `DEVELOPMENT_TEAM` 写的是作者自己的 Team ID，换成你的，或者在 Xcode 的 Signing & Capabilities 里改成 Sign to Run Locally。
 
@@ -41,7 +63,7 @@ open Dejima.xcodeproj
 
 1. Xcode → New Project → macOS → App，Interface 选 SwiftUI，命名 `Dejima`
 2. 删掉模板生成的 `ContentView.swift` 和 `DejimaApp.swift`
-3. 把 `Sources/` 里的 9 个文件拖进去
+3. 把 `Sources/` 根目录下的 11 个文件拖进去，再从 `TranslationLegacy/` 和 `Translation26/` 里**二选一**（前者要求 macOS 15，后者 26）
 4. Target → Info 里加一行 `Application is agent (UIElement)` = `YES`
 5. Target → Signing & Capabilities 里**删掉 App Sandbox**（沙盒和全局按键监听冲突）
 
@@ -108,7 +130,7 @@ open Dejima.xcodeproj
 
 **剪贴板要轮询。** 监听到第二下 ⌘C 的时候，这个按键还没送到前台 App，剪贴板里还是旧内容。所以先记下 `changeCount`，每 20 ms 查一次，最多等 300 ms。两次 ⌘C 的间隔窗口默认 0.45 秒（`UserDefaults` 的 `doublePressWindow` 可以改）。
 
-**藏了一个 1×1 的窗口。** `TranslationSession` 只能从 SwiftUI 的 `.translationTask` 修饰符里拿到，没有「直接给我一个 session」的 API。菜单栏 App 没有天然的视图可以挂，所以塞了一个全透明的 1×1 窗口常驻屏幕角落。它必须真的在屏幕上——`orderOut` 或者移到屏幕外，SwiftUI 就认为视图从未出现，task 永远不会跑。另外同一组语言对再次翻译时，configuration 因为相等而不会触发重跑，必须显式调 `invalidate()`。
+**藏了一个 1×1 的窗口**（仅 macOS 15 版；26 版不需要，见上面的版本对比）**。** `TranslationSession` 只能从 SwiftUI 的 `.translationTask` 修饰符里拿到，没有「直接给我一个 session」的 API。菜单栏 App 没有天然的视图可以挂，所以塞了一个全透明的 1×1 窗口常驻屏幕角落。它必须真的在屏幕上——`orderOut` 或者移到屏幕外，SwiftUI 就认为视图从未出现，task 永远不会跑。另外同一组语言对再次翻译时，configuration 因为相等而不会触发重跑，必须显式调 `invalidate()`。
 
 **浮窗不抢焦点。** `NSPanel` 带 `.nonactivatingPanel`，所以它弹出来的时候不会把焦点从你正在读的东西上夺走，光标留在原处。位置会做边界收敛，保证整个窗口留在指针所在的那块屏幕里。
 
@@ -122,7 +144,8 @@ open Dejima.xcodeproj
 | `Controller` | `AppDelegate` + 把下面这些串起来：权限、监听开关、翻译任务编排 |
 | `DoubleCopyMonitor` | 全局按键监听 + 双击判定 + 剪贴板读取 |
 | `LanguageRouter` | 语种识别和翻译方向决策 |
-| `TranslationHub` | 把苹果的视图绑定 API 包成普通 `async` 函数，含隐藏宿主窗口和长文本分块 |
+| `TranslationLegacy/TranslationHub` | macOS 15 版：把苹果的视图绑定 API 包成普通 `async` 函数，含隐藏宿主窗口 |
+| `Translation26/TranslationHub` | macOS 26 版：直接创建 session，同样的对外 API，没有窗口 |
 | `Polisher` | 可选的 Apple Intelligence 二次润色 |
 | `TextCleaner` | 修复从 PDF 复制来的硬换行 |
 | `LoginItem` | 开机启动 |

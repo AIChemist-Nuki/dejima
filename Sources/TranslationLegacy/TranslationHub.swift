@@ -18,6 +18,13 @@ final class TranslationHub: ObservableObject {
         let continuation: CheckedContinuation<String, Error>
     }
     private var pending: Job?
+    private var host: TranslationHostWindow?
+
+    /// Puts the host window on screen. It has to be up before the first
+    /// translation, or there is no view for `.translationTask` to run on.
+    func start() {
+        host = TranslationHostWindow(hub: self)
+    }
 
     /// - Parameter onPartial: Called with everything translated so far each
     ///   time a chunk lands, so long text can appear a paragraph at a time.
@@ -101,7 +108,7 @@ private struct TranslationHostView: View {
 /// It has to be genuinely on screen — an off-screen or ordered-out window means
 /// SwiftUI treats the view as never appearing and the task never runs.
 @MainActor
-final class TranslationHostWindow {
+private final class TranslationHostWindow {
     private let window: NSWindow
 
     init(hub: TranslationHub) {

@@ -5,12 +5,19 @@ options:
     macOS: "15.0"
   createIntermediateGroups: true
 
-targets:
-  Dejima:
+# Two builds of the same app. Everything is shared except how a
+# TranslationSession is obtained, which is the one thing macOS 26 changed:
+#
+#   Dejima    — macOS 15+, hosts the session in a hidden 1×1 window
+#   Dejima26  — macOS 26+, creates the session directly, no window
+#
+# Each target picks up exactly one of Sources/TranslationLegacy and
+# Sources/Translation26. Both files declare `TranslationHub` with the same
+# API, so nothing else in the app knows which build it is in.
+targetTemplates:
+  App:
     type: application
     platform: macOS
-    sources:
-      - Sources
     info:
       path: Info.plist
       properties:
@@ -18,7 +25,8 @@ targets:
         CFBundleDisplayName: Dejima
         CFBundleShortVersionString: "0.1.0"
         CFBundleVersion: "1"
-        LSMinimumSystemVersion: "15.0"
+        # Follows whichever deployment target the build uses.
+        LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
         # Menu bar only — no Dock icon, no main window.
         LSUIElement: true
     entitlements:
@@ -29,6 +37,8 @@ targets:
         com.apple.security.app-sandbox: false
     settings:
       base:
+        # Shared, so someone moving from the 15 build to the 26 build keeps
+        # their Accessibility grant, login item and settings.
         PRODUCT_BUNDLE_IDENTIFIER: com.nuki.Dejima
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
@@ -38,3 +48,25 @@ targets:
         # Fill in your Team ID, or set signing to "Sign to Run Locally" in Xcode.
         DEVELOPMENT_TEAM: "D56G7B2W2N"
         CODE_SIGN_STYLE: Automatic
+
+targets:
+  Dejima:
+    templates: [App]
+    deploymentTarget: "15.0"
+    sources:
+      - path: Sources
+        excludes:
+          - "Translation26/**"
+
+  Dejima26:
+    templates: [App]
+    deploymentTarget: "26.0"
+    sources:
+      - path: Sources
+        excludes:
+          - "TranslationLegacy/**"
+    settings:
+      base:
+        # Distinct so both can build into the same directory without
+        # overwriting each other. Rename the .app when packaging a release.
+        PRODUCT_NAME: Dejima26

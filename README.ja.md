@@ -21,6 +21,21 @@
 | アクセシビリティ権限 | 必須。⌘C を監視するため |
 | Apple Intelligence | 任意。推敲機能のみで必要、かつ macOS 26 以降 |
 
+## どちらをダウンロードするか
+
+ビルドは2種類あります。機能は同じで、違うのは翻訳セッションをシステムからどう受け取るかだけです。
+
+| | **Dejima** | **Dejima 26** |
+|---|---|---|
+| 必要な macOS | 15 以降 | 26 以降 |
+| セッションの取得元 | 1×1 の隠しウィンドウに載せた `.translationTask` | `TranslationSession(installedSource:target:)` で直接 |
+| 言語パックが未導入のとき | システムのダウンロードダイアログ | エラーを出し、導入用のメニュー項目を案内 |
+| 言語を判定できないとき | 原文の言語はフレームワークに推測させる | 確度が低くても最良の推測を採用 |
+
+**macOS 26 未満では Dejima 一択です。** 26 以降はどちらでも動きます。Dejima 26 は画面の隅に居座る隠しウィンドウがなくなる代わりに、上の2点の挙動差を受け入れることになります。どちらも日常的には問題になりませんが、モデルを揃えている最中は前者のほうが楽です。
+
+bundle ID は共通なので、片方からもう片方に乗り換えてもアクセシビリティの許可、ログイン項目、設定はそのまま引き継がれます。
+
 ## ビルド
 
 XcodeGen がある場合：
@@ -31,7 +46,14 @@ xcodegen generate
 open Dejima.xcodeproj
 ```
 
-あとは ⌘R。
+Xcode のスキーム選択に `Dejima` と `Dejima26` が並ぶので、どちらかを選んで ⌘R。コマンドラインなら：
+
+```bash
+xcodebuild -scheme Dejima   -configuration Release build   # macOS 15+
+xcodebuild -scheme Dejima26 -configuration Release build   # macOS 26+
+```
+
+`Dejima26` の生成物が `Dejima26.app` という名前なのは、2つのターゲットが互いを上書きしないためだけです。配布用にまとめるときは `Dejima.app` に戻してください。バンドル内の名前はもともと Dejima です。
 
 `project.yml` の `DEVELOPMENT_TEAM` は作者自身の Team ID です。自分のものに差し替えるか、Xcode の Signing & Capabilities で「Sign to Run Locally」に変えてください。
 
@@ -41,7 +63,7 @@ XcodeGen なしで手動で作る場合：
 
 1. Xcode → New Project → macOS → App、Interface は SwiftUI、名前は `Dejima`
 2. 自動生成された `ContentView.swift` と `DejimaApp.swift` を削除
-3. `Sources/` の9ファイルをドラッグで追加
+3. `Sources/` 直下の11ファイルと、`TranslationLegacy/` か `Translation26/` の**どちらか一方**をドラッグで追加（それぞれ macOS 15 用と 26 用）
 4. Target → Info に `Application is agent (UIElement)` = `YES` を追加
 5. Target → Signing & Capabilities で **App Sandbox を削除**（サンドボックスとグローバルなキー監視は両立しません）
 
@@ -108,7 +130,7 @@ XcodeGen なしで手動で作る場合：
 
 **クリップボードはポーリングが必要。** 2回目の ⌘C を捉えた時点では、そのキーストロークはまだ最前面のアプリに届いておらず、クリップボードには古い内容が入っています。そこで `changeCount` を記録し、20 ms ごとに最大 300 ms まで確認します。2回目の押下を受け付ける間隔は既定 0.45 秒（`UserDefaults` の `doublePressWindow` で変更可）。
 
-**1×1 の隠しウィンドウがある。** `TranslationSession` は SwiftUI の `.translationTask` モディファイア内でしか渡されません。「セッションをくれ」という API は存在しないのです。メニューバーアプリにはそれを載せる自然なビューがないので、完全に透明な 1×1 のウィンドウを画面の隅に常駐させています。これは本当に画面上にある必要があります——`orderOut` したり画面外に移すと、SwiftUI はビューが一度も現れていないと見なし、task は永遠に走りません。また同じ言語ペアで再度翻訳すると configuration が等値になって SwiftUI がスキップするため、明示的に `invalidate()` を呼ぶ必要があります。
+**1×1 の隠しウィンドウがある**（macOS 15 版のみ。26 版には不要です——上の比較表を参照）**。** `TranslationSession` は SwiftUI の `.translationTask` モディファイア内でしか渡されません。「セッションをくれ」という API は存在しないのです。メニューバーアプリにはそれを載せる自然なビューがないので、完全に透明な 1×1 のウィンドウを画面の隅に常駐させています。これは本当に画面上にある必要があります——`orderOut` したり画面外に移すと、SwiftUI はビューが一度も現れていないと見なし、task は永遠に走りません。また同じ言語ペアで再度翻訳すると configuration が等値になって SwiftUI がスキップするため、明示的に `invalidate()` を呼ぶ必要があります。
 
 **パネルはフォーカスを奪わない。** `NSPanel` に `.nonactivatingPanel` を付けているので、表示しても読んでいたものからフォーカスが移らず、カーソル位置もそのままです。表示位置は、ウィンドウ全体がポインタのある画面内に収まるよう補正されます。
 
@@ -122,7 +144,8 @@ XcodeGen なしで手動で作る場合：
 | `Controller` | `AppDelegate` と全体の配線：権限、監視の切り替え、翻訳処理の進行管理 |
 | `DoubleCopyMonitor` | グローバルなキー監視、二度押し判定、クリップボード読み取り |
 | `LanguageRouter` | 言語判定と翻訳方向の決定 |
-| `TranslationHub` | Apple のビュー束縛 API を素の `async` 関数に包む。隠しホストウィンドウと分割処理もここ |
+| `TranslationLegacy/TranslationHub` | macOS 15 版。Apple のビュー束縛 API を素の `async` 関数に包む。隠しホストウィンドウもここ |
+| `Translation26/TranslationHub` | macOS 26 版。セッションを直接生成する。対外 API は同じ、ウィンドウなし |
 | `Polisher` | 任意の Apple Intelligence による推敲 |
 | `TextCleaner` | PDF からのコピーで入る強制改行の修復 |
 | `LoginItem` | ログイン時の自動起動 |
