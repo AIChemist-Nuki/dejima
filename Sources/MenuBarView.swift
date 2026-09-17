@@ -6,6 +6,9 @@ struct MenuBarView: View {
     @State private var primary = LanguageRouter.primary
     @State private var secondary = LanguageRouter.secondary
     @AppStorage("polishWithAppleIntelligence") private var polish = false
+    /// Mirrors the Service Management status, which is the real source of
+    /// truth — the system can revoke this from Login Items at any time.
+    @State private var launchAtLogin = LoginItem.isEnabled
 
     var body: some View {
         if !controller.hasAccessibility {
@@ -39,6 +42,18 @@ struct MenuBarView: View {
         }
 
         Divider()
+
+        Toggle("Open at login", isOn: Binding(
+            get: { launchAtLogin },
+            set: { wanted in
+                LoginItem.setEnabled(wanted)
+                launchAtLogin = LoginItem.isEnabled
+            }
+        ))
+
+        if LoginItem.needsApproval {
+            Button("Approve in Login Items…") { LoginItem.openSettings() }
+        }
 
         Button("Check language models…") { openTranslationSettings() }
         Button("Quit Dejima") { NSApp.terminate(nil) }
