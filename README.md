@@ -1,6 +1,6 @@
 # Dejima
 
-选中文字，连按两下 ⌘C，译文浮现在光标旁边。全程本地运行，不联网。
+选中文字，连按两下 ⌘C，译文浮现在光标旁边。翻译全程在本地完成，不经过任何服务器。
 
 [English](README.en.md) · [日本語](README.ja.md)
 
@@ -64,6 +64,9 @@ open Dejima.xcodeproj
 | `Translate into` | 主语言，默认简体中文 |
 | `Unless it already is, then` | 如果检测到的已经是主语言，就改译成这个，默认日语 |
 | `Refine with Apple Intelligence` | 可选的二次润色，默认关闭。只有设备支持时才显示这一项 |
+| `Open at login` | 登录时自动启动 |
+| `Check for updates automatically` | 每天最多查一次 GitHub 有没有新版本，**默认关闭** |
+| `Check for updates…` | 手动查一次 |
 | `Check language models…` | 打开系统设置的翻译语言面板，在那里下载和管理模型 |
 | `Quit Dejima` (⌘Q) | 退出 |
 
@@ -84,6 +87,18 @@ open Dejima.xcodeproj
 语种识别用 `NLLanguageRecognizer`。短句的判断结果不可靠，所以加了道门槛：置信度超过 0.4，或者文本长于 12 个字符，才采信识别结果；否则当作「识别不出来」处理。`zh-Hans` 和 `zh` 在方向判断里算同一种语言。
 
 可选的语言在 `LanguageRouter.choices` 里，目前是简繁中文、日、英、韩、德、法、西、俄。Apple 支持的更多，按自己需要加减。
+
+## 联网情况
+
+**你翻译的任何内容都不会离开这台机器。** 翻译走的是 macOS 本地的 Translation 框架，润色走的是端上的 Apple Intelligence，两者都不联网。
+
+整个 app 里只有一处会发出网络请求：检查更新，去 GitHub 的 releases API 问一句最新版本号。
+
+- 手动的 `Check for updates…` 只在你点的时候发一次
+- `Check for updates automatically` **默认关闭**；打开后每天最多查一次，在启动时进行
+- 请求里除了 HTTP 本身没有任何内容——不带标识、不带用量、更不带你翻译过的文字
+
+代码在 `Sources/Updater.swift`，一共不到 180 行，可以自己看一遍。不想要就把这两项留在关闭状态，或者直接删掉这个文件。
 
 ## 工作原理
 
@@ -109,6 +124,9 @@ open Dejima.xcodeproj
 | `LanguageRouter` | 语种识别和翻译方向决策 |
 | `TranslationHub` | 把苹果的视图绑定 API 包成普通 `async` 函数，含隐藏宿主窗口和长文本分块 |
 | `Polisher` | 可选的 Apple Intelligence 二次润色 |
+| `TextCleaner` | 修复从 PDF 复制来的硬换行 |
+| `LoginItem` | 开机启动 |
+| `Updater` | 检查更新，全 app 唯一的联网点 |
 | `ResultPanel` | `ResultModel` + 不抢焦点的浮窗 |
 | `ResultView` | 浮窗里的内容：译文在上，原文在下 |
 | `MenuBarView` | 菜单内容 |
