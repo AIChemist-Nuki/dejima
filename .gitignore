@@ -1,6 +1,9 @@
 # XcodeGen 生成，不入库。project.yml 才是工程的源。
 Dejima.xcodeproj/
 
+# 发布产物
+dist/
+
 # Xcode
 DerivedData/
 build/
