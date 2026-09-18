@@ -25,6 +25,7 @@ final class Controller: ObservableObject {
 
     private let monitor = DoubleCopyMonitor()
     private var panel: ResultPanel?
+    private var guide: PermissionGuide?
     private var currentJob: Task<Void, Never>?
     /// Bumped per request. A superseded translation can still be mid-chunk
     /// inside the hub, and its partial results must not land in the panel.
@@ -40,7 +41,13 @@ final class Controller: ObservableObject {
             self?.handle(text)
         }
         refreshPermission()
-        if hasAccessibility { enableMonitoring() }
+        if hasAccessibility {
+            enableMonitoring()
+        } else {
+            // Without this permission the app can do nothing at all, so the
+            // first run is the guide.
+            showPermissionGuide()
+        }
     }
 
     // MARK: - Permission
@@ -49,8 +56,9 @@ final class Controller: ObservableObject {
         hasAccessibility = AXIsProcessTrusted()
     }
 
-    /// Shows the system prompt the first time; afterwards it silently returns
-    /// the current state, so also open the settings pane for the user.
+    /// The system prompt only appears the first time; after that it silently
+    /// returns the current state. Either way the guide is what actually gets
+    /// anyone through this, so it follows.
     func requestPermission() {
         let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         let granted = AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
@@ -58,9 +66,21 @@ final class Controller: ObservableObject {
         if granted {
             enableMonitoring()
         } else {
-            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-            NSWorkspace.shared.open(url)
+            showPermissionGuide()
         }
+    }
+
+    private func showPermissionGuide() {
+        if guide == nil {
+            guide = PermissionGuide { [weak self] in
+                guard let self else { return }
+                self.hasAccessibility = true
+                // Installs the monitors fresh, which is what makes the grant
+                // take effect without relaunching.
+                self.enableMonitoring()
+            }
+        }
+        guide?.show()
     }
 
     // MARK: - Monitoring

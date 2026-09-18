@@ -103,7 +103,11 @@ Without XcodeGen, set it up by hand:
 
 ## First run
 
-**1. Grant Accessibility access.** Click the menu bar icon → `Grant Accessibility access…`, then enable Dejima under System Settings → Privacy & Security → Accessibility. Restart the app afterwards.
+**1. Grant Accessibility access.** Launching without the permission opens a guide window; follow it. Click the button to open the Accessibility pane, then **drag the Dejima icon from the window straight into the list** and switch it on.
+
+What you drag is the running bundle itself, so you can't add the wrong one. The grant is bound to a specific bundle: an alias, or a second copy still in Downloads, will look like it worked and do nothing. If the app isn't in Applications, the guide also warns you to move it first — moving it afterwards invalidates the grant.
+
+The window closes itself once the switch is on, and monitoring starts immediately; a relaunch usually isn't needed. To open the guide again: menu bar icon → `Grant Accessibility access…`.
 
 **2. Download the language models.** `Check language models…` in the menu opens the Translation Languages pane in System Settings. Grab one per language you need. Each pack is 1–3 GB.
 
@@ -181,6 +185,7 @@ Long text is split into 1200-character chunks along paragraph boundaries, transl
 | `TranslationLegacy/TranslationHub` | macOS 15 build: wraps Apple's view-bound API as a plain `async` function; owns the hidden host window |
 | `Translation26/TranslationHub` | macOS 26 build: creates a session directly. Same API, no window |
 | `Polisher` | Optional Apple Intelligence refinement |
+| `PermissionGuide` | The Accessibility onboarding window, with the draggable app icon |
 | `TextCleaner` | Repairs hard line breaks from PDF copies |
 | `LoginItem` | Launch at login |
 | `Updater` | The update check — the only networking in the app |
@@ -208,6 +213,10 @@ About the refine pass: Apple's NMT model is fast and offline, but it flattens te
 ## About the name
 
 Dejima was an artificial island in the harbour of Nagasaki. Through the two centuries Japan spent closed to the outside world, it was the country's only channel for foreign trade — a very small port, but everything from outside came through it.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
 
 ## References
 
