@@ -103,7 +103,11 @@ xcrun notarytool store-credentials dejima \
 
 ## 第一次运行
 
-**1. 给辅助功能权限。** 点菜单栏图标 → `Grant Accessibility access…`，然后在系统设置 → 隐私与安全性 → 辅助功能里打开 Dejima。给完之后需要重启一次 app。
+**1. 给辅助功能权限。** 没有权限时启动会弹出一个引导窗口，照着做就行：点按钮打开辅助功能面板，然后把窗口里那个 Dejima 图标**直接拖进列表**，再打开开关。
+
+拖的是正在运行的那个 bundle 本身，所以不会出现「加错了一个副本」的情况——这个授权是绑定到具体 bundle 的，列表里加进去的如果是替身、或者 Downloads 里的另一份拷贝，看起来加上了但实际不生效。如果 app 不在 Applications 里，引导窗口还会提醒你先挪过去，否则挪动之后授权会失效。
+
+开关打开后引导窗口自己关闭，监听立刻生效，通常不需要重启 app。手动再次打开这个窗口：菜单栏图标 → `Grant Accessibility access…`。
 
 **2. 下载语言模型。** 菜单里的 `Check language models…` 会打开系统设置的翻译语言面板，把要用的语言各下一个（比如日语、简体中文、英语）。每个语言包 1–3 GB。
 
@@ -181,6 +185,7 @@ xcrun notarytool store-credentials dejima \
 | `TranslationLegacy/TranslationHub` | macOS 15 版：把苹果的视图绑定 API 包成普通 `async` 函数，含隐藏宿主窗口 |
 | `Translation26/TranslationHub` | macOS 26 版：直接创建 session，同样的对外 API，没有窗口 |
 | `Polisher` | 可选的 Apple Intelligence 二次润色 |
+| `PermissionGuide` | 辅助功能授权的引导窗口，可拖拽的 app 图标 |
 | `TextCleaner` | 修复从 PDF 复制来的硬换行 |
 | `LoginItem` | 开机启动 |
 | `Updater` | 检查更新，全 app 唯一的联网点 |
@@ -208,6 +213,10 @@ xcrun notarytool store-credentials dejima \
 ## 关于这个名字
 
 出島是江户时代长崎港里的一座人工岛。锁国的两百年间，它是日本唯一对外通商的窗口——一个很小的口岸，但外面的东西都从这里进来。
+
+## 许可证
+
+MIT，见 [LICENSE](LICENSE)。
 
 ## 参考
 
