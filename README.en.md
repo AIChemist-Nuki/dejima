@@ -53,7 +53,41 @@ xcodebuild -scheme Dejima   -configuration Release build   # macOS 15+
 xcodebuild -scheme Dejima26 -configuration Release build   # macOS 26+
 ```
 
-`Dejima26` builds to `Dejima26.app` purely so the two targets don't overwrite each other — rename it to `Dejima.app` when packaging a release, since the bundle already calls itself Dejima.
+`Dejima26` builds to `Dejima26.app` purely so the two targets don't overwrite each other; packaging renames it to `Dejima.app`, which is what the bundle calls itself anyway.
+
+## Packaging a release
+
+```bash
+CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+NOTARY_PROFILE=dejima \
+./Scripts/release.sh
+```
+
+That leaves `dist/Dejima-<version>.dmg`, holding one folder per minimum macOS version, each with a `Dejima.app` and an Applications alias:
+
+```
+Dejima 0.1.0
+├── macOS 15-25/
+│   ├── Dejima.app
+│   └── Applications →
+├── macOS 26+/
+│   ├── Dejima.app
+│   └── Applications →
+└── Read Me.txt
+```
+
+Both are named `Dejima.app`; the folder is what distinguishes them, so nothing lands in `/Applications` with a version number stuck to its name. Installing the wrong one is harmless — macOS refuses to launch a build that needs a newer system and says which one it needs.
+
+**Signing is not optional.** The Apple Development certificate the project defaults to only runs on your own machine; Gatekeeper blocks it for everyone who downloads it. Publishing needs a Developer ID Application certificate plus notarization. Store the notary credentials once:
+
+```bash
+xcrun notarytool store-credentials dejima \
+  --apple-id you@example.com --team-id TEAMID --password <app-specific-password>
+```
+
+The script runs without those two variables too; you just get a DMG only you can open, and it says so when it finishes.
+
+**Every release**, bump `MARKETING_VERSION` in `project.yml` (both targets share the one template) and tag as `v0.1.0`. The update check compares against the version inside the bundle, so forgetting means people who installed the new build are still told there's a new build.
 
 `DEVELOPMENT_TEAM` in `project.yml` is the author's own Team ID. Replace it with yours, or switch to "Sign to Run Locally" under Signing & Capabilities in Xcode.
 

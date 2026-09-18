@@ -53,7 +53,41 @@ xcodebuild -scheme Dejima   -configuration Release build   # macOS 15+
 xcodebuild -scheme Dejima26 -configuration Release build   # macOS 26+
 ```
 
-`Dejima26` の生成物が `Dejima26.app` という名前なのは、2つのターゲットが互いを上書きしないためだけです。配布用にまとめるときは `Dejima.app` に戻してください。バンドル内の名前はもともと Dejima です。
+`Dejima26` の生成物が `Dejima26.app` という名前なのは、2つのターゲットが互いを上書きしないためだけです。パッケージ時に `Dejima.app` に戻されます。バンドル内の名前はもともと Dejima です。
+
+## 配布用のパッケージ
+
+```bash
+CODE_SIGN_IDENTITY="Developer ID Application: 名前 (TEAMID)" \
+NOTARY_PROFILE=dejima \
+./Scripts/release.sh
+```
+
+`dist/Dejima-<バージョン>.dmg` ができます。必要な macOS ごとにフォルダが分かれ、それぞれに `Dejima.app` と Applications のエイリアスが入っています。
+
+```
+Dejima 0.1.0
+├── macOS 15-25/
+│   ├── Dejima.app
+│   └── Applications →
+├── macOS 26+/
+│   ├── Dejima.app
+│   └── Applications →
+└── Read Me.txt
+```
+
+どちらも `Dejima.app` という名前で、区別するのはフォルダ名です。そのため `/Applications` にバージョン番号付きの名前が残りません。間違えて入れても問題はありません。要件を満たさないビルドは macOS が起動を拒否し、必要なバージョンを表示します。
+
+**署名は必須です。** プロジェクトが既定で使う Apple Development 証明書は自分の Mac でしか動かず、ダウンロードした人の環境では Gatekeeper に弾かれます。公開配布には Developer ID Application 証明書と公証が必要です。公証用の資格情報は一度だけ保存しておきます。
+
+```bash
+xcrun notarytool store-credentials dejima \
+  --apple-id you@example.com --team-id TEAMID --password <アプリ用パスワード>
+```
+
+この2つの環境変数なしでも実行できますが、できるのは自分だけが開ける DMG です。その旨はスクリプトの最後に表示されます。
+
+**リリースごとに** `project.yml` の `MARKETING_VERSION` を上げ（2つのターゲットは同じテンプレートを共有します）、`v0.1.0` の形式でタグを打ってください。更新確認はバンドル内のバージョンと比較するため、忘れると新しいビルドを入れた人にまで更新通知が出ます。
 
 `project.yml` の `DEVELOPMENT_TEAM` は作者自身の Team ID です。自分のものに差し替えるか、Xcode の Signing & Capabilities で「Sign to Run Locally」に変えてください。
 

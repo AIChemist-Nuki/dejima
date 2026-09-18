@@ -53,7 +53,41 @@ xcodebuild -scheme Dejima   -configuration Release build   # macOS 15+
 xcodebuild -scheme Dejima26 -configuration Release build   # macOS 26+
 ```
 
-`Dejima26` 的产物叫 `Dejima26.app`，只是为了两个 target 不互相覆盖；打包发布时改回 `Dejima.app` 就行，bundle 里的名字本来就是 Dejima。
+`Dejima26` 的产物叫 `Dejima26.app`，只是为了两个 target 不互相覆盖；打包时会改回 `Dejima.app`，bundle 里的名字本来就是 Dejima。
+
+## 打包发布
+
+```bash
+CODE_SIGN_IDENTITY="Developer ID Application: 你的名字 (TEAMID)" \
+NOTARY_PROFILE=dejima \
+./Scripts/release.sh
+```
+
+产出 `dist/Dejima-<版本号>.dmg`，里面是两个文件夹，各放一份 `Dejima.app` 和一个 Applications 替身：
+
+```
+Dejima 0.1.0
+├── macOS 15-25/
+│   ├── Dejima.app
+│   └── Applications →
+├── macOS 26+/
+│   ├── Dejima.app
+│   └── Applications →
+└── Read Me.txt
+```
+
+两份都叫 `Dejima.app`，靠文件夹区分——装完之后 `/Applications` 里不会留下一个名字带版本号的 app。用户装错也不会有问题：系统版本不够时 macOS 会拒绝启动并说明需要哪个版本。
+
+**签名是硬要求。** 项目默认用的 Apple Development 证书只能在你自己机器上跑，别人下载后会被 Gatekeeper 拒绝。公开发布需要 Developer ID Application 证书 + 公证。公证凭据预先存一次：
+
+```bash
+xcrun notarytool store-credentials dejima \
+  --apple-id you@example.com --team-id TEAMID --password <app 专用密码>
+```
+
+不带这两个环境变量也能跑，得到的是一个只有你自己能打开的 DMG，脚本结束时会提示这一点。
+
+**每次发版**记得改 `project.yml` 里的 `MARKETING_VERSION`（两个 target 共用同一份模板），tag 用 `v0.1.0` 这种格式——更新检查比的是 bundle 里的版本号，忘了改的话用户装了新版还会被提示有新版本。
 
 `project.yml` 里的 `DEVELOPMENT_TEAM` 写的是作者自己的 Team ID，换成你的，或者在 Xcode 的 Signing & Capabilities 里改成 Sign to Run Locally。
 
