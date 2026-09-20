@@ -4,6 +4,7 @@ options:
   deploymentTarget:
     macOS: "15.0"
   createIntermediateGroups: true
+  developmentLanguage: en
 
 # Two builds of the same app. Everything is shared except how a
 # TranslationSession is obtained, which is the one thing macOS 26 changed:
@@ -44,6 +45,13 @@ targetTemplates:
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
         SWIFT_STRICT_CONCURRENCY: targeted
+        # Without this, nothing in Swift source reaches the String Catalog and
+        # the catalog silently stays almost empty.
+        SWIFT_EMIT_LOC_STRINGS: YES
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+        # Puts the surrounding source comment next to each string, which is
+        # most of the context a translator has to work from.
+        LOCALIZED_STRING_CODE_COMMENTS: YES
         ENABLE_HARDENED_RUNTIME: YES
         # Fill in your Team ID, or set signing to "Sign to Run Locally" in Xcode.
         DEVELOPMENT_TEAM: "D56G7B2W2N"
@@ -57,6 +65,16 @@ targets:
       - path: Sources
         excludes:
           - "Translation26/**"
+      # Xcode puts these at the root. They have to be listed, or regenerating
+      # the project drops the localizations.
+      #
+      # Regenerating does reset the project's knownRegions to English, because
+      # XcodeGen has no key for it. That only affects the language list in
+      # Xcode's catalog editor — the translations live inside the .xcstrings
+      # files and still compile into ja.lproj and zh-Hans.lproj. To edit
+      # translations after a regenerate, re-add the languages in Xcode.
+      - path: Localizable.xcstrings
+      - path: InfoPlist.xcstrings
 
   Dejima26:
     templates: [App]
@@ -65,6 +83,8 @@ targets:
       - path: Sources
         excludes:
           - "TranslationLegacy/**"
+      - path: Localizable.xcstrings
+      - path: InfoPlist.xcstrings
     settings:
       base:
         # Distinct so both can build into the same directory without

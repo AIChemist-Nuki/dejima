@@ -109,10 +109,10 @@ enum Updater {
 
     private static func presentUpdate(_ release: Release) {
         let alert = NSAlert()
-        alert.messageText = "Dejima \(release.version) is available"
-        alert.informativeText = "You're running \(currentVersion)."
-        alert.addButton(withTitle: "Open Release Page")
-        alert.addButton(withTitle: "Later")
+        alert.messageText = String(localized: "Dejima \(release.version) is available")
+        alert.informativeText = String(localized: "You're running \(currentVersion).")
+        alert.addButton(withTitle: String(localized: "Open Release Page"))
+        alert.addButton(withTitle: String(localized: "Later"))
         if runModal(alert) == .alertFirstButtonReturn {
             NSWorkspace.shared.open(release.htmlURL)
         }
@@ -120,18 +120,18 @@ enum Updater {
 
     private static func presentUpToDate() {
         let alert = NSAlert()
-        alert.messageText = "Dejima is up to date"
-        alert.informativeText = "\(currentVersion) is the latest release."
-        alert.addButton(withTitle: "OK")
+        alert.messageText = String(localized: "Dejima is up to date")
+        alert.informativeText = String(localized: "\(currentVersion) is the latest release.")
+        alert.addButton(withTitle: String(localized: "OK"))
         _ = runModal(alert)
     }
 
     private static func presentFailure(_ error: Error) {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "Couldn't check for updates"
+        alert.messageText = String(localized: "Couldn't check for updates")
         alert.informativeText = error.localizedDescription
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: String(localized: "OK"))
         _ = runModal(alert)
     }
 
@@ -152,11 +152,11 @@ enum UpdateError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .badResponse:
-            return "GitHub returned something unexpected."
+            return String(localized: "GitHub returned something unexpected.")
         case .noReleases:
-            return "There are no published releases yet."
+            return String(localized: "There are no published releases yet.")
         case .http(let code):
-            return "GitHub returned HTTP \(code)."
+            return String(localized: "GitHub returned HTTP \(code).")
         }
     }
 }

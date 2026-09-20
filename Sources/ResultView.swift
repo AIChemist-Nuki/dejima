@@ -59,12 +59,13 @@ struct ResultView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
+            // Not a control — it just says which way this went, which is how
+            // you notice a wrong guess. It used to sit in a capsule, which
+            // made it look like the buttons on the other side and invited
+            // clicks that did nothing.
             Text(model.routeLabel)
                 .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background(.quaternary, in: Capsule())
+                .foregroundStyle(.tertiary)
 
             Spacer()
 
@@ -85,7 +86,9 @@ struct ResultView: View {
                 Image(systemName: model.isPinned ? "pin.fill" : "pin")
             }
             .foregroundStyle(model.isPinned ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
-            .help(model.isPinned ? "Unpin" : "Keep the panel open when you click elsewhere")
+            .help(model.isPinned
+                  ? LocalizedStringKey("Unpin")
+                  : LocalizedStringKey("Keep the panel open when you click elsewhere"))
 
             Button(action: onClose) {
                 Image(systemName: "xmark")
@@ -137,11 +140,20 @@ struct ResultView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func activity(_ label: String) -> some View {
+    private func activity(_ label: LocalizedStringKey) -> some View {
         HStack(spacing: 8) {
             ProgressView().controlSize(.small)
             Text(label).foregroundStyle(.secondary)
         }
         .font(.body)
     }
+}
+
+#Preview {
+    let model = ResultModel()
+    model.sourceText = "本研究では、葉酸代謝経路におけるミトコンドリア酵素の役割を検討した。"
+    model.routeLabel = "日语 → 中文"
+    model.state = .done("本研究探讨了叶酸代谢通路中线粒体酶的作用。")
+    return ResultView(model: model, onContentHeightChange: { _ in }, onClose: {})
+        .frame(width: ResultView.Layout.width, height: 220)
 }

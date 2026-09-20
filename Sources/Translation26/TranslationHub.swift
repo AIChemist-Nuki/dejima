@@ -96,10 +96,10 @@ enum TranslationHubError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unknownSourceLanguage:
-            return "Dejima couldn't tell what language this is. Pick a source language in the menu and copy again."
+            return String(localized: "Dejima couldn't tell what language this is. Pick a source language in the menu and copy again.")
         case .notInstalled(let source, let target):
             let pair = "\(LanguageRouter.displayName(source)) → \(LanguageRouter.displayName(target))"
-            return "\(pair) isn't downloaded yet. Use “Check language models…” in the menu to install it, then copy again."
+            return String(localized: "\(pair) isn't downloaded yet. Use “Check language models…” in the menu to install it, then copy again.")
         }
     }
 }
