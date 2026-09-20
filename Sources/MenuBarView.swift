@@ -17,10 +17,15 @@ struct MenuBarView: View {
             Divider()
         }
 
-        Button(controller.isMonitoring ? "Pause ⌘C ⌘C" : "Resume ⌘C ⌘C") {
-            controller.toggleMonitoring()
+        // Two separate literals rather than a ternary, so both reach the
+        // String Catalog.
+        if controller.isMonitoring {
+            Button("Pause ⌘C ⌘C") { controller.toggleMonitoring() }
+                .disabled(!controller.hasAccessibility)
+        } else {
+            Button("Resume ⌘C ⌘C") { controller.toggleMonitoring() }
+                .disabled(!controller.hasAccessibility)
         }
-        .disabled(!controller.hasAccessibility)
 
         Divider()
 

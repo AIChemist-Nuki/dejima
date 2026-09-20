@@ -58,7 +58,7 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
                             styleMask: [.titled, .closable, .utilityWindow],
                             backing: .buffered,
                             defer: false)
-        panel.title = "Accessibility access"
+        panel.title = String(localized: "Accessibility access")
         panel.isFloatingPanel = true
         // Above System Settings, which is where the drop target lives.
         panel.level = .floating
@@ -155,7 +155,7 @@ private struct PermissionGuideView: View {
         .frame(width: PermissionGuide.windowWidth, alignment: .topLeading)
     }
 
-    private func step(_ number: Int, _ text: String, @ViewBuilder control: () -> some View) -> some View {
+    private func step(_ number: Int, _ text: LocalizedStringKey, @ViewBuilder control: () -> some View) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Text("\(number)")
                 .font(.caption.weight(.semibold).monospacedDigit())

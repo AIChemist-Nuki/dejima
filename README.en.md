@@ -115,6 +115,12 @@ Without a model, the first translation triggers the system's download prompt —
 
 **3. Try it.** Select a sentence in a foreign language and press ⌘C twice.
 
+## Interface language
+
+Follows the system language: Simplified Chinese, Japanese and English. There's no separate setting for it — anything else falls back to English.
+
+This has nothing to do with what gets translated, which is governed by the language pair in the menu.
+
 ## The menu
 
 | Item | What it does |

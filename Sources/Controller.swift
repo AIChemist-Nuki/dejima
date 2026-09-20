@@ -172,7 +172,7 @@ enum DejimaError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noRoute:
-            return "Dejima couldn't tell what language this is. Pick a source language in the menu and copy again."
+            return String(localized: "Dejima couldn't tell what language this is. Pick a source language in the menu and copy again.")
         }
     }
 }
