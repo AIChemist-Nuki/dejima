@@ -20,11 +20,19 @@ struct MenuBarView: View {
         // Two separate literals rather than a ternary, so both reach the
         // String Catalog.
         if controller.isMonitoring {
-            Button("Pause ⌘C ⌘C") { controller.toggleMonitoring() }
-                .disabled(!controller.hasAccessibility)
+            Button {
+                controller.toggleMonitoring()
+            } label: {
+                Text(hinted(String(localized: "Pause 「Dejima」"), "⌘C C"))
+            }
+            .disabled(!controller.hasAccessibility)
         } else {
-            Button("Resume ⌘C ⌘C") { controller.toggleMonitoring() }
-                .disabled(!controller.hasAccessibility)
+            Button {
+                controller.toggleMonitoring()
+            } label: {
+                Text(hinted(String(localized: "Resume 「Dejima」"), "⌘C C"))
+            }
+            .disabled(!controller.hasAccessibility)
         }
 
         Divider()
@@ -70,6 +78,28 @@ struct MenuBarView: View {
         Button("Check language models…") { openTranslationSettings() }
         Button("Quit Dejima") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
+    }
+
+    /// Puts a dimmed hint after a menu title, matched to the size and grey of
+    /// the key equivalents down the right-hand side.
+    ///
+    /// It can't be one of those. macOS reserves that column for real single
+    /// shortcuts, and ⌘C ⌘C is a double press the app watches for globally —
+    /// `.keyboardShortcut` can't express it, and asking for plain ⌘C would
+    /// both claim that key from the open menu and describe the wrong gesture.
+    /// So the hint sits inline, and only has to not look out of place.
+    private func hinted(_ title: String, _ shortcut: String) -> AttributedString {
+        // Left to itself the hint comes out at the ordinary system size,
+        // visibly smaller than the menu around it.
+        let size = NSFont.menuFont(ofSize: 0).pointSize
+        var text = AttributedString(title)
+        text.font = .system(size: size)
+        var hint = AttributedString("  \(shortcut)")
+        hint.font = .system(size: size)
+        // .secondary is a good deal darker than a key equivalent.
+        hint.foregroundColor = Color(nsColor: .tertiaryLabelColor)
+        text.append(hint)
+        return text
     }
 
     /// Apple's models are downloaded per language pair and shared system-wide,
