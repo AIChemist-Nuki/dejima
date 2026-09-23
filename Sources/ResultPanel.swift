@@ -91,10 +91,15 @@ final class ResultPanel {
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
-        // The traffic light lands right on top of the language badge. The
-        // header carries its own close button instead, which a pinned panel
-        // needs anyway now that clicking away no longer dismisses it.
-        panel.standardWindowButton(.closeButton)?.isHidden = true
+        // No traffic light. The close button landed right on top of the
+        // language badge, and hiding only that one left minimise and zoom
+        // behind as two dim circles that did nothing — a utility panel can be
+        // neither minimised nor zoomed. The header carries its own close
+        // button, which a pinned panel needs anyway now that clicking away no
+        // longer dismisses it.
+        for button in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
+            panel.standardWindowButton(button)?.isHidden = true
+        }
         panel.contentView = NSHostingView(rootView: ResultView(
             model: model,
             onContentHeightChange: { [weak self] height in self?.fit(contentHeight: height) },
