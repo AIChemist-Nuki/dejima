@@ -9,6 +9,10 @@
 # Dejima.app — the folder is what tells them apart, so nothing ends up in
 # /Applications with a version number stuck to its name.
 #
+# Every window is laid out over a drawn background that says what to do, so
+# the Read Me is there for the curious rather than for the confused. Both the
+# drawing and the layout come out of Scripts/dmg-window.swift.
+#
 # SIGNING. Without arguments this signs with whatever the project is set to,
 # which is an Apple Development certificate: fine on your own machine, refused
 # by Gatekeeper everywhere else. A build other people can open needs a
@@ -38,12 +42,26 @@ STAGE="$BUILD/dmg"
 DIST="$PWD/dist"
 DMG="$DIST/Dejima-$VERSION.dmg"
 
+# The folder names are load-bearing: the DMG layout positions icons by name.
+FOLDER_NEW="macOS 26+"
+FOLDER_OLD="macOS 15-25"
+
+# The app icon, drawn by Scripts/app-icon.swift, reused for the DMG.
+ICON="$PWD/Assets.xcassets/AppIcon.appiconset/icon_512.png"
+
 command -v xcodegen >/dev/null || { echo "error: xcodegen not installed (brew install xcodegen)" >&2; exit 1; }
 
 # Run something noisy, and only show its output if it actually fails.
 quiet() {
     local log="$BUILD/step.log"
     "$@" >"$log" 2>&1 || { echo "error: $1 failed" >&2; cat "$log" >&2; exit 1; }
+}
+
+# Run one of the script-mode Swift tools below. The module cache goes with the
+# rest of the build rather than into the shared one under $TMPDIR, which the
+# script is not always allowed to write to.
+swift_tool() {
+    quiet swift -module-cache-path "$BUILD/module-cache" "$@"
 }
 
 echo "==> Dejima $VERSION"
@@ -85,8 +103,20 @@ build_one() {
     echo "    minimum:   $(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$STAGE/$folder/Dejima.app/Contents/Info.plist")"
 }
 
-build_one Dejima   Dejima   "macOS 15-25"
-build_one Dejima26 Dejima26 "macOS 26+"
+build_one Dejima   Dejima   "$FOLDER_OLD"
+build_one Dejima26 Dejima26 "$FOLDER_NEW"
+
+echo "==> Drawing the window backgrounds"
+mkdir -p "$STAGE/.background"
+swift_tool Scripts/dmg-window.swift art "$STAGE/.background" "$VERSION" "$ICON"
+# Finder takes one file per window, so each pair of sizes becomes a single
+# HiDPI TIFF. Anything else is drawn at 1x and looks soft on a Retina display.
+for art in root folder; do
+    quiet tiffutil -cathidpicheck \
+        "$STAGE/.background/$art.png" "$STAGE/.background/$art@2x.png" \
+        -out "$STAGE/.background/$art.tiff"
+    rm -f "$STAGE/.background/$art.png" "$STAGE/.background/$art@2x.png"
+done
 
 # Most people never open this; the folder names carry the decision. It's here
 # for the ones who do.
@@ -166,20 +196,28 @@ echo "==> Creating $DMG"
 # `diskutil image create` works but cannot produce a compressed image from a
 # folder, so: make a writable one large enough, fill it, convert it.
 RW="$BUILD/rw.dmg"
-MOUNT="$BUILD/mnt"
 rm -f "$DMG" "$RW"
-rm -rf "$MOUNT"
-mkdir -p "$MOUNT"
 
 SIZE=$(( $(du -sm "$STAGE" | cut -f1) * 3 / 2 + 50 ))
 quiet diskutil image create blank --size "${SIZE}m" --volumeName "Dejima $VERSION" "$RW"
-quiet hdiutil attach "$RW" -nobrowse -mountpoint "$MOUNT"
-# -R keeps the Applications symlinks as symlinks.
-cp -R "$STAGE"/* "$MOUNT"/
+
+# Mounted under /Volumes rather than at a private mount point: the window
+# backgrounds are referenced by an alias record, and one made against a
+# private path is a worse bet at open time than one made against /Volumes.
+MOUNT=$(hdiutil attach "$RW" -nobrowse -noverify -noautoopen | sed -n 's|.*\(/Volumes/.*\)$|\1|p' | head -1)
+[ -n "$MOUNT" ] || { echo "error: could not tell where $RW mounted" >&2; exit 1; }
+
+# -R keeps the Applications symlinks as symlinks, and the trailing /. takes
+# the hidden .background folder along with everything else.
+cp -R "$STAGE"/. "$MOUNT"/
+
+echo "==> Laying out the DMG windows"
+swift_tool Scripts/dmg-window.swift layout "$MOUNT" "$FOLDER_NEW" "$FOLDER_OLD" "$ICON"
+sync
+
 hdiutil detach "$MOUNT" >/dev/null 2>&1 || hdiutil detach "$MOUNT" -force >/dev/null
 quiet diskutil image create from "$RW" --format UDZO "$DMG"
 rm -f "$RW"
-rmdir "$MOUNT" 2>/dev/null || true
 
 if [ -n "${NOTARY_PROFILE:-}" ]; then
     echo "==> Notarizing"
