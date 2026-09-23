@@ -8,7 +8,7 @@ struct DejimaApp: App {
         MenuBarExtra {
             MenuBarView(controller: delegate.controller)
         } label: {
-            Image(systemName: "character.bubble")
+            Image(nsImage: DejimaMark.menuBarImage())
         }
         .menuBarExtraStyle(.menu)
     }

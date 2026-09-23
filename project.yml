@@ -44,6 +44,7 @@ targetTemplates:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_STRICT_CONCURRENCY: targeted
         # Without this, nothing in Swift source reaches the String Catalog and
         # the catalog silently stays almost empty.
@@ -75,6 +76,8 @@ targets:
       # translations after a regenerate, re-add the languages in Xcode.
       - path: Localizable.xcstrings
       - path: InfoPlist.xcstrings
+      # Drawn by Scripts/app-icon.swift, not by hand.
+      - path: Assets.xcassets
 
   Dejima26:
     templates: [App]
@@ -85,6 +88,7 @@ targets:
           - "TranslationLegacy/**"
       - path: Localizable.xcstrings
       - path: InfoPlist.xcstrings
+      - path: Assets.xcassets
     settings:
       base:
         # Distinct so both can build into the same directory without
