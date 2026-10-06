@@ -2,7 +2,7 @@
 
 Select text, press ⌘C twice, and the translation appears next to your pointer. Translation happens entirely on device — nothing you translate goes through a server.
 
-[简体中文](README.md) · [日本語](README.ja.md)
+[简体中文](README.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
 
 Dejima lives in the menu bar — no Dock icon, no main window. Translation goes through macOS's built-in Translation framework, and the language models are shared system-wide: anything you downloaded for the Translate app works here, and the other way around.
 
@@ -14,12 +14,7 @@ Dejima was an artificial island in the harbour of Nagasaki. Through the two cent
 
 ## Download
 
-Grab `Dejima-<version>.dmg` from [Releases](https://github.com/AIChemist-Nuki/dejima/releases/latest). Open it, pick the folder matching your system, and drag the `Dejima.app` inside onto the Applications alias beside it.
-
-| Folder | For |
-|---|---|
-| `macOS 15-25` | macOS 15 through 25 |
-| `macOS 26+` | macOS 26 or newer |
+Grab `Dejima-<version>.dmg` from [Releases](https://github.com/AIChemist-Nuki/dejima/releases/latest). Open it, open “macOS 26 or later” or “macOS 15 to 25” to match your system, and drag the `Dejima.app` inside onto the Applications alias beside it.
 
 Getting it wrong is harmless: macOS refuses to launch a build that needs a newer system and tells you which one you need.
 
@@ -59,7 +54,7 @@ The panel has a copy button. Click outside it or press Esc to dismiss.
 
 ## Interface language
 
-Follows the system language: Simplified Chinese, Japanese and English, with no separate setting; anything else falls back to English. What gets translated is unaffected — that's the language pair above.
+Follows the system language: Simplified Chinese, Japanese, Korean and English, with no separate setting; anything else falls back to English. What gets translated is unaffected — that's the language pair above.
 
 ## What touches the network
 
@@ -114,16 +109,18 @@ That leaves `dist/Dejima-<version>.dmg`, holding one folder per minimum macOS ve
 
 ```
 Dejima 0.2.0
-├── macOS 15-25/
+├── macOS 15-25.localized/
 │   ├── Dejima.app
 │   └── Applications →
-├── macOS 26+/
+├── macOS 26+.localized/
 │   ├── Dejima.app
 │   └── Applications →
 └── Read Me.txt
 ```
 
 Both are named `Dejima.app`; the folder is what distinguishes them, so nothing lands in `/Applications` with a version number stuck to its name.
+
+The folders end in `.localized`: Finder hides the suffix and shows each folder under a name in the reader's system language (Chinese, English, Japanese, Korean; English for anything else). The names are set by `localize_folder` in `release.sh`.
 
 **Signing is not optional.** The Apple Development certificate the project defaults to only runs on your own machine; Gatekeeper blocks it for everyone who downloads it. Publishing needs a Developer ID Application certificate plus notarization. Store the notary credentials once:
 

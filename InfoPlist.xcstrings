@@ -17,6 +17,12 @@
             "value" : "Dejima"
           }
         },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Dejima"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "machine_translated",
@@ -36,6 +42,12 @@
           }
         },
         "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Dejima"
+          }
+        },
+        "ko" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Dejima"
