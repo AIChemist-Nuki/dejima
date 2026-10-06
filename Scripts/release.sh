@@ -2,7 +2,19 @@
 #
 # Builds both targets and packages them into one DMG.
 #
-#   ./Scripts/release.sh
+#   ./Scripts/release.sh 0.3.0    tag HEAD as v0.3.0, then build it
+#   ./Scripts/release.sh          build the version HEAD is already tagged with
+#
+# VERSION. The git tag is the only source of the version number: it is what
+# the GitHub release is published under and what Updater.swift compares
+# against, so the app reads the same thing. The build number is the commit
+# count, which only ever goes up. Nothing is edited or committed to bump a
+# version; the tag is created locally and pushing it is left to you:
+#
+#   git push origin main v0.3.0
+#
+# The working tree has to be clean, so that the DMG is exactly the tagged
+# commit and not whatever happened to be lying around uncommitted.
 #
 # The DMG holds two folders, one per minimum macOS version, each with a
 # Dejima.app and an Applications alias to drag it onto. Both apps are named
@@ -31,11 +43,33 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-VERSION=$(grep -m1 'MARKETING_VERSION:' project.yml | sed 's/.*: *"\(.*\)"/\1/')
-if [ -z "$VERSION" ]; then
-    echo "error: could not read MARKETING_VERSION from project.yml" >&2
+if [ -n "$(git status --porcelain)" ]; then
+    echo "error: uncommitted changes. Commit or stash them first:" >&2
+    git status --short >&2
     exit 1
 fi
+
+if [ $# -gt 0 ]; then
+    VERSION="${1#v}"
+    [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+        echo "error: '$1' is not a version like 0.3.0" >&2; exit 1
+    }
+    if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+        echo "error: tag v$VERSION already exists" >&2
+        exit 1
+    fi
+    git tag "v$VERSION"
+    echo "==> Tagged HEAD as v$VERSION"
+else
+    TAG=$(git tag --points-at HEAD --list 'v[0-9]*' | sort -V | tail -1)
+    [ -n "$TAG" ] || {
+        echo "error: HEAD has no vX.Y.Z tag. Pass the new version: ./Scripts/release.sh 0.3.0" >&2
+        echo "       (latest tag: $(git describe --tags --abbrev=0 2>/dev/null || echo none))" >&2
+        exit 1
+    }
+    VERSION="${TAG#v}"
+fi
+BUILD_NUMBER=$(git rev-list --count HEAD)
 
 BUILD="$PWD/build/release"
 STAGE="$BUILD/dmg"
@@ -64,7 +98,7 @@ swift_tool() {
     quiet swift -module-cache-path "$BUILD/module-cache" "$@"
 }
 
-echo "==> Dejima $VERSION"
+echo "==> Dejima $VERSION ($BUILD_NUMBER)"
 rm -rf "$BUILD"
 mkdir -p "$STAGE" "$DIST"
 xcodegen generate >/dev/null
@@ -79,6 +113,11 @@ build_one() {
         -scheme "$scheme"
         -configuration Release
         -derivedDataPath "$BUILD/dd-$scheme"
+        # Lets automatic signing fetch or create a certificate the way Xcode
+        # does, instead of failing on a revoked or missing one.
+        -allowProvisioningUpdates
+        "MARKETING_VERSION=$VERSION"
+        "CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
     )
     if [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
         # Developer ID needs no provisioning profile for a non-sandboxed app
@@ -100,6 +139,7 @@ build_one() {
 
     codesign --verify --strict --deep "$STAGE/$folder/Dejima.app"
     echo "    signed by: $(codesign -dvv "$STAGE/$folder/Dejima.app" 2>&1 | sed -n 's/^Authority=//p' | head -1)"
+    echo "    version:   $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$STAGE/$folder/Dejima.app/Contents/Info.plist") ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$STAGE/$folder/Dejima.app/Contents/Info.plist"))"
     echo "    minimum:   $(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$STAGE/$folder/Dejima.app/Contents/Info.plist")"
 }
 

@@ -64,27 +64,25 @@ final class TranslationHub {
         return recognizer.dominantLanguage.map { Locale.Language(identifier: $0.rawValue) }
     }
 
-    /// The framework rejects very long strings. Split on paragraphs and refill
-    /// up to a safe size so a whole abstract still goes through in one go.
+    /// One request per paragraph — after `TextCleaner`, each line is one.
+    /// Translation time grows with length (about 2 s for a 450-character
+    /// paragraph), so the first paragraph appears after its own time instead of
+    /// after a whole batch. Batching saves nothing: the total and the output
+    /// come out the same, because the model translates each paragraph on its
+    /// own even when they share a request.
     static func chunk(_ text: String, limit: Int = 1200) -> [String] {
-        guard text.count > limit else { return [text] }
-
         var chunks: [String] = []
-        var current = ""
         for paragraph in text.components(separatedBy: "\n") {
-            if current.count + paragraph.count + 1 > limit, !current.isEmpty {
-                chunks.append(current)
-                current = ""
+            var rest = Substring(paragraph.trimmingCharacters(in: .whitespaces))
+            // The framework rejects very long strings, so a paragraph past the
+            // limit still has to be cut.
+            while rest.count > limit {
+                let cut = rest.index(rest.startIndex, offsetBy: limit)
+                chunks.append(String(rest[..<cut]))
+                rest = rest[cut...]
             }
-            current += current.isEmpty ? paragraph : "\n" + paragraph
-            // A single paragraph longer than the limit still has to be cut.
-            while current.count > limit {
-                let cut = current.index(current.startIndex, offsetBy: limit)
-                chunks.append(String(current[..<cut]))
-                current = String(current[cut...])
-            }
+            if !rest.isEmpty { chunks.append(String(rest)) }
         }
-        if !current.isEmpty { chunks.append(current) }
         return chunks
     }
 }

@@ -24,8 +24,10 @@ targetTemplates:
       properties:
         CFBundleName: Dejima
         CFBundleDisplayName: Dejima
-        CFBundleShortVersionString: "0.2.0"
-        CFBundleVersion: "1"
+        # Both come from the build settings below, so there is one place to
+        # change them — and Scripts/release.sh overrides both from the git tag.
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         # Follows whichever deployment target the build uses.
         LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
         # Menu bar only — no Dock icon, no main window.
@@ -41,6 +43,8 @@ targetTemplates:
         # Shared, so someone moving from the 15 build to the 26 build keeps
         # their Accessibility grant, login item and settings.
         PRODUCT_BUNDLE_IDENTIFIER: com.nuki.Dejima
+        # Only what a build from Xcode reports. Releases take theirs from the
+        # git tag (vX.Y.Z) and the commit count; see Scripts/release.sh.
         MARKETING_VERSION: "0.2.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
