@@ -2,7 +2,7 @@
 
 选中文字，连按两下 ⌘C，译文浮现在光标旁边。翻译全程在本地完成，不经过任何服务器。
 
-[English](README.en.md) · [日本語](README.ja.md)
+[English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
 
 菜单栏常驻，没有 Dock 图标，也没有主窗口。翻译走 macOS 自带的 Translation 框架，语言模型是系统级共享的——「翻译」App 下载过的，这里直接能用，反之亦然。
 
@@ -14,12 +14,7 @@
 
 ## 下载
 
-到 [Releases](https://github.com/AIChemist-Nuki/dejima/releases/latest) 下载 `Dejima-<版本号>.dmg`，打开后按自己的系统版本选一个文件夹，把里面的 `Dejima.app` 拖到旁边的 Applications 上。
-
-| 文件夹 | 适用 |
-|---|---|
-| `macOS 15-25` | macOS 15 到 25 |
-| `macOS 26+` | macOS 26 或更新 |
+到 [Releases](https://github.com/AIChemist-Nuki/dejima/releases/latest) 下载 `Dejima-<版本号>.dmg`，打开后按自己的系统版本打开「macOS 26 或更新」或「macOS 15 到 25」文件夹，把里面的 `Dejima.app` 拖到旁边的 Applications 上。
 
 装错了不要紧：系统版本不够时 macOS 会直接拒绝启动，并告诉你该装哪个。
 
@@ -59,7 +54,7 @@
 
 ## 界面语言
 
-跟随系统语言，有简体中文、日语和英语三种，没有单独的设置，其他语言会落到英语。译文和原文本身不受此影响，那取决于上面的翻译方向。
+跟随系统语言，有简体中文、日语、韩语和英语四种，没有单独的设置，其他语言会落到英语。译文和原文本身不受此影响，那取决于上面的翻译方向。
 
 ## 联网情况
 
@@ -114,16 +109,18 @@ NOTARY_PROFILE=dejima \
 
 ```
 Dejima 0.2.0
-├── macOS 15-25/
+├── macOS 15-25.localized/
 │   ├── Dejima.app
 │   └── Applications →
-├── macOS 26+/
+├── macOS 26+.localized/
 │   ├── Dejima.app
 │   └── Applications →
 └── Read Me.txt
 ```
 
 两份都叫 `Dejima.app`，靠文件夹区分，装完之后 `/Applications` 里不会留下一个名字带版本号的 app。
+
+文件夹带 `.localized` 后缀：Finder 会把后缀藏起来，按用户的系统语言显示文件夹名（中、英、日、韩，其他语言显示英文）。各语言的名字写在 `release.sh` 的 `localize_folder` 里。
 
 **签名是硬要求。** 项目默认的 Apple Development 证书只能在你自己机器上跑，别人下载后会被 Gatekeeper 拒绝。公开发布需要 Developer ID Application 证书 + 公证，公证凭据预先存一次：
 

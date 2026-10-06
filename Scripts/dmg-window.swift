@@ -67,7 +67,7 @@ enum Palette {
 /// its fallback from the *renderer's* locale rather than from the text.
 /// Naming the family keeps the output the same whoever runs the release.
 enum Script {
-    case latin, chinese, japanese
+    case latin, chinese, japanese, korean
     /// The wordmark, set in a mincho serif the way the logo sheet has it.
     case wordmark
 
@@ -76,6 +76,7 @@ enum Script {
         case .latin: return nil
         case .chinese: return "PingFang SC"
         case .japanese: return "Hiragino Sans"
+        case .korean: return "Apple SD Gothic Neo"
         case .wordmark: return "Hiragino Mincho ProN"
         }
     }
@@ -180,20 +181,22 @@ func drawArt(into directory: URL, version: String, icon: NSImage) throws {
 
     try write("root", Root.size) { canvas in
         let mark: CGFloat = 60
-        icon.draw(in: CGRect(x: (canvas.width - mark) / 2, y: canvas.height - 28 - mark,
+        icon.draw(in: CGRect(x: (canvas.width - mark) / 2, y: canvas.height - 20 - mark,
                              width: mark, height: mark))
 
         line("Dejima", font: font(32, .bold, .wordmark), color: Palette.ink,
-             top: 100, width: canvas.width, canvas: canvas)
+             top: 90, width: canvas.width, canvas: canvas)
         line(version, font: font(11), color: Palette.faint,
-             top: 138, width: canvas.width, canvas: canvas)
+             top: 128, width: canvas.width, canvas: canvas)
 
         line("打开与你的系统相符的那个文件夹", font: font(13, .medium, .chinese), color: Palette.muted,
-             top: 172, width: canvas.width, canvas: canvas)
+             top: 156, width: canvas.width, canvas: canvas)
         line("Open the folder that matches your macOS", font: font(12), color: Palette.muted,
-             top: 196, width: canvas.width, canvas: canvas)
+             top: 178, width: canvas.width, canvas: canvas)
         line("お使いの macOS に合うフォルダを開いてください", font: font(12, .regular, .japanese), color: Palette.muted,
-             top: 218, width: canvas.width, canvas: canvas)
+             top: 197, width: canvas.width, canvas: canvas)
+        line("사용 중인 macOS에 맞는 폴더를 여세요", font: font(12, .regular, .korean), color: Palette.muted,
+             top: 216, width: canvas.width, canvas: canvas)
 
         // A card per build, so the two read as a choice between two things
         // rather than as two loose icons. The folder's own name carries the
@@ -216,9 +219,10 @@ func drawArt(into directory: URL, version: String, icon: NSImage) throws {
         CGRect(x: 60, y: canvas.height - 430, width: 440, height: 1).fill()
 
         for (top, text, lineFont) in [
-            (CGFloat(448), "不确定是哪个版本：苹果菜单 → 关于本机", font(11, .regular, .chinese)),
-            (CGFloat(467), "Not sure which macOS you have? Apple menu → About This Mac", font(11)),
-            (CGFloat(486), "バージョンの確認: アップルメニュー → このMacについて", font(11, .regular, .japanese)),
+            (CGFloat(442), "不确定是哪个版本：屏幕左上角的 \u{F8FF} → 关于本机", font(11, .regular, .chinese)),
+            (CGFloat(460), "Not sure which macOS you have? \u{F8FF} (top-left of the screen) → About This Mac", font(11)),
+            (CGFloat(478), "バージョンの確認: 画面左上の \u{F8FF} → このMacについて", font(11, .regular, .japanese)),
+            (CGFloat(496), "버전 확인: 화면 왼쪽 위의 \u{F8FF} → 이 Mac에 관하여", font(11, .regular, .korean)),
         ] {
             line(text, font: lineFont, color: Palette.faint, alignment: .left,
                  top: top, left: 60, width: 440, canvas: canvas)
@@ -227,11 +231,13 @@ func drawArt(into directory: URL, version: String, icon: NSImage) throws {
 
     try write("folder", Build.size) { canvas in
         line("把 Dejima 拖到 Applications", font: font(17, .semibold, .chinese), color: Palette.ink,
-             top: 40, width: canvas.width, canvas: canvas)
+             top: 30, width: canvas.width, canvas: canvas)
         line("Drag Dejima onto Applications", font: font(12), color: Palette.muted,
-             top: 74, width: canvas.width, canvas: canvas)
+             top: 62, width: canvas.width, canvas: canvas)
         line("Dejima を Applications にドラッグ", font: font(12, .regular, .japanese), color: Palette.muted,
-             top: 95, width: canvas.width, canvas: canvas)
+             top: 81, width: canvas.width, canvas: canvas)
+        line("Dejima를 Applications로 드래그", font: font(12, .regular, .korean), color: Palette.muted,
+             top: 100, width: canvas.width, canvas: canvas)
 
         // A dashed target around the Applications alias: the arrow says to
         // drag, this says how far.
@@ -262,11 +268,6 @@ func drawArt(into directory: URL, version: String, icon: NSImage) throws {
         tip.line(to: CGPoint(x: end - head, y: y - head * 0.72))
         tip.close()
         tip.fill()
-
-        line("装错了也不要紧：系统版本不够时 macOS 会直接拒绝启动", font: font(11, .regular, .chinese),
-             color: Palette.faint, top: 296, width: canvas.width, canvas: canvas)
-        line("Picking the wrong build is harmless — macOS just refuses to launch it",
-             font: font(11), color: Palette.faint, top: 316, width: canvas.width, canvas: canvas)
     }
 }
 

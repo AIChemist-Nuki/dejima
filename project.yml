@@ -76,8 +76,8 @@ targets:
       # Regenerating does reset the project's knownRegions to English, because
       # XcodeGen has no key for it. That only affects the language list in
       # Xcode's catalog editor — the translations live inside the .xcstrings
-      # files and still compile into ja.lproj and zh-Hans.lproj. To edit
-      # translations after a regenerate, re-add the languages in Xcode.
+      # files and still compile into ja.lproj, ko.lproj and zh-Hans.lproj. To
+      # edit translations after a regenerate, re-add the languages in Xcode.
       - path: Localizable.xcstrings
       - path: InfoPlist.xcstrings
       # Drawn by Scripts/app-icon.swift, not by hand.
