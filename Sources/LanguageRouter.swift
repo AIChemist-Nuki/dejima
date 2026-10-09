@@ -6,12 +6,8 @@ struct Route {
     var target: Locale.Language
 }
 
-/// Decides which way to translate.
-///
-/// Default behaviour: everything becomes your primary language, except your
-/// primary language itself, which becomes the secondary one. Reading Japanese
-/// papers all day and occasionally drafting a reply in Japanese both work
-/// without touching a setting.
+/// Translate into the primary language, or into the secondary language
+/// when the source already matches the primary language.
 enum LanguageRouter {
     static var primary: String {
         get { UserDefaults.standard.string(forKey: "primaryLanguage") ?? "zh-Hans" }
@@ -29,11 +25,10 @@ enum LanguageRouter {
         let secondaryLanguage = Locale.Language(identifier: secondary)
 
         guard let detected else {
-            // Unknown script: let the framework guess the source, aim at primary.
+            // Defer source detection to the translation hub.
             return Route(source: nil, target: primaryLanguage)
         }
 
-        // Translating a language into itself is always rejected by the framework.
         if detected.isEquivalent(to: primaryLanguage) {
             return Route(source: detected, target: secondaryLanguage)
         }
@@ -44,7 +39,7 @@ enum LanguageRouter {
         let recognizer = NLLanguageRecognizer()
         recognizer.processString(text)
         guard let hypothesis = recognizer.dominantLanguage else { return nil }
-        // Short strings get low-confidence guesses; don't trust those.
+        // Reject uncertain language guesses for short selections.
         let confidence = recognizer.languageHypotheses(withMaximum: 1)[hypothesis] ?? 0
         guard confidence > 0.4 || text.count > 12 else { return nil }
         return Locale.Language(identifier: hypothesis.rawValue)
@@ -54,13 +49,8 @@ enum LanguageRouter {
         Locale.current.localizedString(forIdentifier: identifier) ?? identifier
     }
 
-    /// Human-readable name for a language, for the badge on the result panel.
-    ///
-    /// The region is always dropped — `zh-Hans-CN` is noise. The script is kept
-    /// only when it tells you something: `Locale.Language` fills in a default
-    /// script for every code, so blindly including it turns Japanese into
-    /// "Japanese (Japanese)", while dropping it would make Traditional and
-    /// Simplified Chinese indistinguishable.
+    /// Omit regions and default scripts from display names. Keep non-default
+    /// scripts to distinguish variants such as Traditional and Simplified Chinese.
     static func displayName(_ language: Locale.Language) -> String {
         guard let code = language.languageCode?.identifier else {
             return language.minimalIdentifier
@@ -73,8 +63,6 @@ enum LanguageRouter {
         return Locale.current.localizedString(forIdentifier: identifier) ?? identifier
     }
 
-    /// Languages worth offering in the menu. Apple supports more; trim or extend
-    /// to taste.
     static let choices = ["zh-Hans", "zh-Hant", "ja", "en", "ko", "de", "fr", "es", "ru"]
 }
 

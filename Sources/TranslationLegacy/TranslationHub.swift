@@ -1,13 +1,9 @@
 import SwiftUI
 import Translation
 
-/// Turns Apple's view-bound translation API into a plain `async` function.
-///
-/// `TranslationSession` can only be handed to you inside SwiftUI's
-/// `.translationTask` modifier — there is no "give me a session" call. So a
-/// 1×1 invisible window hosts a view carrying that modifier, and this object
-/// shuttles requests to it: set a configuration, the closure fires, the closure
-/// resumes the waiting continuation.
+/// Adapts the view-bound translation API to async calls on macOS 15.
+/// A hidden SwiftUI host provides sessions through translationTask,
+/// which resumes the pending continuation.
 @MainActor
 final class TranslationHub: ObservableObject {
     @Published fileprivate var configuration: TranslationSession.Configuration?
@@ -20,14 +16,12 @@ final class TranslationHub: ObservableObject {
     private var pending: Job?
     private var host: TranslationHostWindow?
 
-    /// Puts the host window on screen. It has to be up before the first
-    /// translation, or there is no view for `.translationTask` to run on.
+    /// Create the host before translating so translationTask has an active view.
     func start() {
         host = TranslationHostWindow(hub: self)
     }
 
-    /// - Parameter onPartial: Called with everything translated so far each
-    ///   time a chunk lands, so long text can appear a paragraph at a time.
+    /// - Parameter onPartial: Receives the accumulated translation after each chunk.
     func translate(_ text: String,
                    from source: Locale.Language?,
                    to target: Locale.Language,
@@ -39,8 +33,7 @@ final class TranslationHub: ObservableObject {
             pending = Job(text: text, onPartial: onPartial, continuation: continuation)
 
             if configuration?.source == source, configuration?.target == target {
-                // Same pair as last time: the configuration compares equal and
-                // SwiftUI would skip the task. invalidate() forces a re-run.
+                // Invalidate an unchanged language pair to make SwiftUI rerun the task.
                 configuration?.invalidate()
             } else {
                 configuration = TranslationSession.Configuration(source: source, target: target)
@@ -65,18 +58,12 @@ final class TranslationHub: ObservableObject {
         }
     }
 
-    /// One request per paragraph — after `TextCleaner`, each line is one.
-    /// Translation time grows with length (about 2 s for a 450-character
-    /// paragraph), so the first paragraph appears after its own time instead of
-    /// after a whole batch. Batching saves nothing: the total and the output
-    /// come out the same, because the model translates each paragraph on its
-    /// own even when they share a request.
+    /// Translate paragraphs separately so results can appear incrementally.
+    /// Split paragraphs longer than the request limit.
     static func chunk(_ text: String, limit: Int = 1200) -> [String] {
         var chunks: [String] = []
         for paragraph in text.components(separatedBy: "\n") {
             var rest = Substring(paragraph.trimmingCharacters(in: .whitespaces))
-            // The framework rejects very long strings, so a paragraph past the
-            // limit still has to be cut.
             while rest.count > limit {
                 let cut = rest.index(rest.startIndex, offsetBy: limit)
                 chunks.append(String(rest[..<cut]))
@@ -102,9 +89,8 @@ private struct TranslationHostView: View {
     }
 }
 
-/// A 1×1, fully transparent window pinned to the corner of the main screen.
-/// It has to be genuinely on screen — an off-screen or ordered-out window means
-/// SwiftUI treats the view as never appearing and the task never runs.
+/// The transparent host must remain on-screen and ordered in. Otherwise
+/// SwiftUI does not activate the view's translationTask.
 @MainActor
 private final class TranslationHostWindow {
     private let window: NSWindow

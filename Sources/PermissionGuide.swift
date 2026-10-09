@@ -1,27 +1,14 @@
 import AppKit
 import SwiftUI
 
-/// Walks someone through granting Accessibility access.
-///
-/// The system's own prompt appears once, says almost nothing, and drops you in
-/// a settings pane where the app you need is often not listed at all — you're
-/// expected to find it yourself with the `+` button. People routinely add the
-/// wrong thing there: an alias, a second copy still sitting in Downloads, or
-/// the Xcode build instead of the one in Applications. The grant is bound to a
-/// specific bundle, so the wrong entry silently does nothing.
-///
-/// It offers the *running* bundle as a draggable icon, so whatever lands in
-/// the list is by construction the binary that needs the permission. Once
-/// System Settings is open, the guide steps aside and a strip docks onto the
-/// bottom of the Settings window instead, holding the same icon right under
-/// the list it has to go into.
+/// Guides Accessibility setup using the running app bundle as the drag source.
+/// A separate panel follows System Settings while its window is visible.
 @MainActor
 final class PermissionGuide: NSObject, NSWindowDelegate {
     private var panel: NSPanel?
     private var dock: NSPanel?
     private var watcher: Task<Void, Never>?
-    /// The dock's back button brings the guide back while Settings stays open.
-    /// Opening Settings from the guide again undoes it.
+    /// Keep the guide visible after Back, until Settings is opened from it again.
     private var dockDismissed = false
     private let onGranted: () -> Void
 
@@ -37,8 +24,7 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
             panel.center()
         }
         dockDismissed = false
-        // An agent app has no Dock icon to click, so bring it up explicitly or
-        // the window opens behind whatever is in front.
+        // Activate the agent app so the guide opens in front.
         NSApp.activate()
         panel.makeKeyAndOrderFront(nil)
         startWatching()
@@ -62,9 +48,7 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
             appURL: Bundle.main.bundleURL,
             openSettings: { [weak self] in self?.openSettings() }
         ))
-        // Height comes from the content — the warning about running outside
-        // Applications is only sometimes there, and a fixed height would leave
-        // a hole in the common case.
+        // The installation-location warning changes the required height.
         host.frame.size = CGSize(width: Self.windowWidth, height: host.fittingSize.height)
 
         let panel = NSPanel(contentRect: host.frame,
@@ -73,7 +57,6 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
                             defer: false)
         panel.title = String(localized: "Accessibility access")
         panel.isFloatingPanel = true
-        // Above System Settings, which is where the drop target lives.
         panel.level = .floating
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
@@ -82,9 +65,7 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
         return panel
     }
 
-    /// Borderless and non-activating: clicking or dragging from it must not
-    /// pull focus away from System Settings, or the Settings window would drop
-    /// behind whatever was in front of it.
+    /// Keep System Settings active while the user drags the app into its list.
     private func makeDock() -> NSPanel {
         let host = NSHostingView(rootView: SettingsDockView(
             appURL: Bundle.main.bundleURL,
@@ -117,14 +98,12 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
 
     // MARK: - Watching for the grant
 
-    /// There is no notification for the grant, nor for another app's window
-    /// moving, so poll both. It only runs while the guide is up.
+    /// Poll permission and Settings geometry only while the guide is open.
     private func startWatching() {
         guard watcher == nil else { return }
         watcher = Task { [weak self] in
             var tick = 0
             while !Task.isCancelled {
-                // Fast enough for the dock to keep up with a dragged window.
                 try? await Task.sleep(for: .milliseconds(100))
                 guard let self, !Task.isCancelled else { return }
                 tick += 1
@@ -143,9 +122,7 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
         watcher = nil
     }
 
-    /// Settings on screen: the dock rides along its bottom edge and the guide
-    /// gets out of the way. Settings gone: the guide comes back, since it is
-    /// the only way left to reopen it.
+    /// Show the guide when the Settings window is unavailable or the dock is dismissed.
     private func followSettings() {
         guard let panel else { return }
         let settings = SystemSettings.frontWindowFrame()
@@ -157,8 +134,7 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
         }
         if panel.isVisible { panel.orderOut(nil) }
 
-        // The dock floats, so it would hang over any app someone switches to.
-        // Only show it while Settings (or the dock itself) is what's in use.
+        // Hide the floating dock when another app is active.
         let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         guard front == SystemSettings.bundleID || front == Bundle.main.bundleIdentifier else {
             dock?.orderOut(nil)
@@ -167,8 +143,6 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
 
         if dock == nil { dock = makeDock() }
         guard let dock else { return }
-        // Starts a little inside the sidebar and ends just short of the right
-        // edge, so it reads as belonging to the pane rather than the window.
         let minX = settings.minX + Self.dockSidebarInset
         let frame = CGRect(x: minX,
                            y: settings.minY + 16,
@@ -178,7 +152,7 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
         if !dock.isVisible { dock.orderFrontRegardless() }
     }
 
-    /// Roughly where System Settings' sidebar ends.
+    /// Approximate width of the System Settings sidebar.
     private static let dockSidebarInset: CGFloat = 190
 
     static func openAccessibilitySettings() {
@@ -197,11 +171,8 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
 private enum SystemSettings {
     static let bundleID = "com.apple.systempreferences"
 
-    /// The frontmost System Settings window in AppKit screen coordinates, or
-    /// nil when none is on screen — closed, minimised or on another Space.
-    ///
-    /// Window bounds and owners are readable without Screen Recording; only
-    /// titles are not, and nothing here needs them.
+    /// Returns the frontmost visible Settings window in AppKit coordinates.
+    /// Window bounds and owners are available without Screen Recording access.
     static func frontWindowFrame() -> CGRect? {
         guard let pid = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first?.processIdentifier,
               let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements],
@@ -209,17 +180,16 @@ private enum SystemSettings {
               let primary = NSScreen.screens.first
         else { return nil }
 
-        // Front to back, so the first normal-level match is the one in use.
+        // Window information is ordered front to back.
         for info in windows {
             guard info[kCGWindowOwnerPID as String] as? pid_t == pid,
                   info[kCGWindowLayer as String] as? Int == 0,
                   let dict = info[kCGWindowBounds as String] as? NSDictionary,
                   let bounds = CGRect(dictionaryRepresentation: dict as CFDictionary),
-                  // Skips sheets and popovers Settings puts up on the same level.
+                  // Exclude small sheets and popovers at the same window level.
                   bounds.height > 200
             else { continue }
-            // Quartz measures from the top of the primary screen, AppKit from
-            // its bottom.
+            // Convert from Quartz top-left coordinates to AppKit bottom-left coordinates.
             return CGRect(x: bounds.minX,
                           y: primary.frame.maxY - bounds.maxY,
                           width: bounds.width,
@@ -229,8 +199,6 @@ private enum SystemSettings {
     }
 }
 
-/// The strip docked onto System Settings: an arrow pointing up at the list,
-/// and the app itself to drag there.
 private struct SettingsDockView: View {
     let appURL: URL
     let back: () -> Void
@@ -283,9 +251,8 @@ private struct SettingsDockView: View {
     }
 }
 
-/// Starts a file drag of the bundle straight from AppKit. The dock is never
-/// key, and SwiftUI's `onDrag` can't be relied on to see the first click in a
-/// window that isn't; `acceptsFirstMouse` makes the very first press count.
+/// Use AppKit's acceptsFirstMouse so a drag can begin in the non-key dock.
+/// SwiftUI's onDrag may miss that first press.
 private struct BundleDragSource: NSViewRepresentable {
     let url: URL
 
@@ -304,11 +271,10 @@ private struct BundleDragSource: NSViewRepresentable {
 
         override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
-        // Swallowed so the drags that follow come here.
+        // Handle the initial press to receive subsequent drag events.
         override func mouseDown(with event: NSEvent) {}
 
         override func mouseDragged(with event: NSEvent) {
-            // A file URL, the way Finder hands an .app over.
             let item = NSDraggingItem(pasteboardWriter: url as NSURL)
             let point = convert(event.locationInWindow, from: nil)
             item.setDraggingFrame(CGRect(x: point.x - 24, y: point.y - 24, width: 48, height: 48),
@@ -327,11 +293,9 @@ private struct PermissionGuideView: View {
     let appURL: URL
     let openSettings: () -> Void
 
-    /// A grant follows the bundle. Granting one that lives in Downloads or in
-    /// a DerivedData folder works right up until the app moves, at which point
-    /// it silently stops — worth saying before it happens.
+    /// Warn before granting access to an app that may be moved after installation.
     private var isInApplications: Bool {
-        // Covers ~/Applications too, which is just as stable a home.
+        // Includes both system-wide and per-user Applications directories.
         appURL.path.contains("/Applications/")
     }
 
@@ -390,7 +354,6 @@ private struct PermissionGuideView: View {
         }
     }
 
-    /// The running bundle itself, so there is nothing to pick wrongly.
     private var icon: some View {
         HStack(spacing: 10) {
             Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
@@ -407,9 +370,7 @@ private struct PermissionGuideView: View {
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
-        // A file URL, not the file's contents: an .app is a directory, and the
-        // list in System Settings wants a reference to it the same way Finder
-        // hands one over.
+        // System Settings expects the app bundle URL as the drag payload.
         .onDrag { NSItemProvider(object: appURL as NSURL) }
     }
 }
