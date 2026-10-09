@@ -1,7 +1,7 @@
 import AppKit
 
 /// The 出 monogram, drawn from rectangles for legibility at menu-bar sizes.
-/// Keep the strokes in sync with Scripts/app-icon.swift.
+/// Keep the shape consistent with AppIcon.icon/Assets/DejimaMark.svg.
 enum DejimaMark {
     /// Stroke coordinates in a 120×120 design box, with y increasing downward.
     static let strokes: [CGRect] = [
