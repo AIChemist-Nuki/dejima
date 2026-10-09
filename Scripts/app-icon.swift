@@ -4,13 +4,8 @@
 //
 //   swift Scripts/app-icon.swift [output .appiconset directory]
 //
-// Defaults to Assets.xcassets/AppIcon.appiconset. The result is committed —
-// this is here so the icon can be changed by editing a number rather than by
-// opening a drawing program.
-//
-// The seven strokes are the same ones Sources/DejimaMark.swift ships for the
-// menu bar; keep them in step. Everything else — the tile, the ink, the light
-// the glyph is cut out of — is only ever an icon and lives here.
+// Defaults to Assets.xcassets/AppIcon.appiconset. Commit the generated assets.
+// Keep the seven strokes in sync with Sources/DejimaMark.swift.
 
 import AppKit
 
@@ -47,13 +42,11 @@ func markPath(fittedInto rect: CGRect) -> NSBezierPath {
 
 // MARK: - The icon
 
-/// Vermilion, for the seal it looks like at a glance.
 let ink = NSColor(srgbRed: 0.663, green: 0.231, blue: 0.165, alpha: 1)      // #A93B2A
-let inkShade = NSColor(srgbRed: 0.525, green: 0.180, blue: 0.125, alpha: 1) // a touch deeper
+let inkShade = NSColor(srgbRed: 0.525, green: 0.180, blue: 0.125, alpha: 1)
 let paper = NSColor(srgbRed: 0.984, green: 0.965, blue: 0.937, alpha: 1)    // #FBF6EF
 
-/// Apple's macOS grid: on a 1024 canvas the rounded square is 824 across,
-/// leaving room for the shadow every other icon on the Dock casts.
+/// Scales an 824-point tile within a 1024-point canvas, leaving room for shadow.
 func renderIcon(pixels: Int) -> Data {
     let canvas = CGFloat(pixels)
     let unit = canvas / 1024
@@ -71,8 +64,6 @@ func renderIcon(pixels: Int) -> Data {
     let tile = CGRect(x: 100 * unit, y: 110 * unit, width: 824 * unit, height: 824 * unit)
     let shape = NSBezierPath(roundedRect: tile, xRadius: 185 * unit, yRadius: 185 * unit)
 
-    // The shadow is what makes an icon sit on the Dock rather than float
-    // above it. Small, and only underneath.
     let shadow = NSShadow()
     shadow.shadowColor = NSColor(white: 0, alpha: 0.28)
     shadow.shadowOffset = CGSize(width: 0, height: -10 * unit)
@@ -82,7 +73,6 @@ func renderIcon(pixels: Int) -> Data {
     shape.fill()
     NSShadow().set()
 
-    // A gradient down the tile, shallow enough to read as one colour.
     NSGradient(colors: [inkShade, ink])!.draw(in: shape, angle: 90)
 
     paper.setFill()
@@ -108,8 +98,7 @@ for pixels in [16, 32, 64, 128, 256, 512, 1024] {
         .write(to: directory.appendingPathComponent("icon_\(pixels).png"))
 }
 
-// Each size is wanted twice, once as @1x and once as the @2x of the size
-// below, and the same file answers for both.
+// Reuse each PNG for matching 1x and 2x slots.
 let entries = [(16, 1, 16), (16, 2, 32), (32, 1, 32), (32, 2, 64), (128, 1, 128),
                (128, 2, 256), (256, 1, 256), (256, 2, 512), (512, 1, 512), (512, 2, 1024)]
     .map { (points, scale, pixels) in

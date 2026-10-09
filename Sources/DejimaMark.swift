@@ -1,17 +1,9 @@
 import AppKit
 
-/// The 出 monogram, drawn from seven rectangles.
-///
-/// 出 is "out" — the character on the gate of the island the app is named
-/// after, and the shape of what the app does to a sentence. Built from bare
-/// rectangles rather than set in a typeface so it stays legible at 16 points
-/// in a menu bar, where a real glyph's strokes would close up.
-///
-/// Scripts/app-icon.swift draws the same seven strokes for the app icon.
-/// They have to agree; this is the copy that ships.
+/// The 出 monogram, drawn from rectangles for legibility at menu-bar sizes.
+/// Keep the strokes in sync with Scripts/app-icon.swift.
 enum DejimaMark {
-    /// The strokes in the 120×120 design box, y measured downwards: a spine,
-    /// two pairs of brackets, and the bars that close them.
+    /// Stroke coordinates in a 120×120 design box, with y increasing downward.
     static let strokes: [CGRect] = [
         CGRect(x: 54, y: 13, width: 12, height: 94),
         CGRect(x: 30, y: 21, width: 12, height: 38),
@@ -22,12 +14,10 @@ enum DejimaMark {
         CGRect(x: 12, y: 95, width: 96, height: 12),
     ]
 
-    /// What the strokes actually cover. Fitting to this rather than to the
-    /// design box keeps the mark from floating inside its own margins.
+    /// Fit to the visible strokes, excluding the design-box margins.
     static let inkBounds = CGRect(x: 12, y: 13, width: 96, height: 94)
 
-    /// The mark, centred in `rect` at the largest size that fits, in a
-    /// coordinate space whose y grows upwards.
+    /// Fit and center the mark in a coordinate space with y increasing upward.
     static func path(fittedInto rect: CGRect) -> NSBezierPath {
         let scale = min(rect.width / inkBounds.width, rect.height / inkBounds.height)
         let size = CGSize(width: inkBounds.width * scale, height: inkBounds.height * scale)
@@ -46,8 +36,7 @@ enum DejimaMark {
         return path
     }
 
-    /// The menu bar icon. A template image, so the bar inverts it when the
-    /// menu opens and follows light and dark without being told.
+    /// A template image lets AppKit handle menu selection and appearance changes.
     static func menuBarImage() -> NSImage {
         let side: CGFloat = 18
         let image = NSImage(size: CGSize(width: side, height: side), flipped: false) { rect in

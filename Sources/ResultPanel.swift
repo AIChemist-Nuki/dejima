@@ -5,9 +5,7 @@ import SwiftUI
 final class ResultModel: ObservableObject {
     enum State {
         case translating
-        /// Some chunks are in, the rest are still coming.
         case streaming(String)
-        /// Fully translated; the refiner is having a second pass at it.
         case refining(String)
         case done(String)
         case failed(String)
@@ -16,13 +14,10 @@ final class ResultModel: ObservableObject {
     @Published var sourceText = ""
     @Published var state: State = .translating
     @Published var routeLabel = ""
-    /// A pinned panel ignores clicks outside itself and stays where it is when
-    /// the next translation arrives.
+    /// Pinned panels retain their position and ignore outside clicks.
     @Published var isPinned = false
 
-    /// Text worth putting on the pasteboard: a finished translation, or the
-    /// draft while the refiner works on it. A half-streamed result is left out
-    /// — copying it would silently hand over a truncated translation.
+    /// Only complete translations can be copied, including drafts being refined.
     var copyableText: String? {
         switch state {
         case .done(let text), .refining(let text):
@@ -37,8 +32,7 @@ final class ResultModel: ObservableObject {
         state = .translating
         if let route {
             let to = LanguageRouter.displayName(route.target)
-            // With no detected source the framework picks one, so naming a
-            // source here would be a guess. Just show where it's going.
+            // Omit the source label when language detection is delegated to the hub.
             routeLabel = route.source.map { "\(LanguageRouter.displayName($0)) → \(to)" } ?? "→ \(to)"
         } else {
             routeLabel = ""
@@ -58,19 +52,14 @@ final class ResultModel: ObservableObject {
     }
 }
 
-/// Floating panel that appears next to the pointer.
-///
-/// `.nonactivatingPanel` is the important flag: the panel can show itself
-/// without pulling focus away from whatever you were reading, so the caret
-/// stays where it was.
+/// Displays results without activating the app or moving the text caret.
 @MainActor
 final class ResultPanel {
     private let panel: NSPanel
     private let model: ResultModel
     private var dismissMonitor: Any?
 
-    /// Where the pointer was when the panel was last shown. The panel hangs off
-    /// this point, so it has to survive the resizes that follow.
+    /// Retain the initial pointer position while streaming results resize the panel.
     private var anchor: NSPoint = .zero
 
     init(model: ResultModel) {
@@ -91,12 +80,7 @@ final class ResultPanel {
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
-        // No traffic light. The close button landed right on top of the
-        // language badge, and hiding only that one left minimise and zoom
-        // behind as two dim circles that did nothing — a utility panel can be
-        // neither minimised nor zoomed. The header carries its own close
-        // button, which a pinned panel needs anyway now that clicking away no
-        // longer dismisses it.
+        // Use the header's close button and hide the unused utility-window controls.
         for button in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
             panel.standardWindowButton(button)?.isHidden = true
         }
@@ -108,7 +92,6 @@ final class ResultPanel {
     }
 
     func show(near point: NSPoint) {
-        // A pinned panel was put somewhere on purpose; leave it there.
         if !model.isPinned {
             anchor = point
             place(height: panel.frame.height)
@@ -120,14 +103,12 @@ final class ResultPanel {
     func hide() {
         panel.orderOut(nil)
         removeDismissMonitor()
-        // Pinning applies to the result you pinned. Keeping it on would make
-        // the next translation appear at the old spot for no clear reason.
+        // Closing the panel resets pinning for the next result.
         model.isPinned = false
     }
 
     // MARK: - Geometry
 
-    /// Matches the window to the height its content actually wants.
     private func fit(contentHeight: CGFloat) {
         let target = ResultView.Layout.height(forContent: contentHeight)
         guard abs(target - panel.frame.height) > 0.5 else { return }
@@ -136,16 +117,14 @@ final class ResultPanel {
             place(height: target)
             return
         }
-        // Pinned: the panel may have been dragged deliberately, so grow from
-        // where it stands rather than snapping back to the pointer.
+        // Keep the top edge of a pinned panel fixed when resizing.
         var frame = panel.frame
         frame.origin.y += frame.height - target
         frame.size.height = target
         panel.setFrame(frame, display: true)
     }
 
-    /// Hangs the panel below and right of the anchor at the given height,
-    /// nudged as needed to keep all of it on the screen the pointer is on.
+    /// Place the panel beside the anchor, constrained to that screen's visible area.
     private func place(height: CGFloat) {
         let width = ResultView.Layout.width
         var origin = NSPoint(x: anchor.x + 12, y: anchor.y - 12 - height)
@@ -170,7 +149,7 @@ final class ResultPanel {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 if event.type == .keyDown {
-                    if event.keyCode == 53 { self.hide() }  // esc closes either way
+                    if event.keyCode == 53 { self.hide() }  // Escape also dismisses pinned panels.
                 } else if !self.model.isPinned {
                     self.hide()
                 }

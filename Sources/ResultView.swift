@@ -1,20 +1,15 @@
 import AppKit
 import SwiftUI
 
-/// The translation is the hero; the original sits underneath as reference.
-/// Everything else stays quiet — this window appears on top of whatever you
-/// were reading, so it should read like a caption, not an app.
 struct ResultView: View {
     @ObservedObject var model: ResultModel
-    /// Reports the ideal height of the scrollable content so the window can
-    /// size itself to the translation instead of to a guess.
+    /// Report content height to resize the result panel.
     var onContentHeightChange: (CGFloat) -> Void
     var onClose: () -> Void
 
-    /// Sizes shared with `ResultPanel`, which owns the window.
+    /// Dimensions shared with ResultPanel.
     enum Layout {
-        /// Fixed. Text needs a stable measure to wrap against, and a panel that
-        /// changed width per result would jitter as chunks stream in.
+        /// Keep text wrapping stable as translated chunks arrive.
         static let width: CGFloat = 380
         static let padding: CGFloat = 16
         static let headerHeight: CGFloat = 20
@@ -22,7 +17,7 @@ struct ResultView: View {
         static let minHeight: CGFloat = 96
         static let maxHeight: CGFloat = 520
 
-        /// Everything in the window that isn't the scrollable content.
+        /// Height occupied by padding and the header.
         static var chrome: CGFloat { padding * 2 + headerHeight + headerSpacing }
 
         static func height(forContent content: CGFloat) -> CGFloat {
@@ -44,8 +39,7 @@ struct ResultView: View {
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                // Inside a ScrollView this stack is laid out at its ideal
-                // height, which is exactly what the window wants to know.
+                // Measure the content height inside the scroll view, before viewport clipping.
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
                     onContentHeightChange(height)
                 }
@@ -59,10 +53,6 @@ struct ResultView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            // Not a control — it just says which way this went, which is how
-            // you notice a wrong guess. It used to sit in a capsule, which
-            // made it look like the buttons on the other side and invited
-            // clicks that did nothing.
             Text(model.routeLabel)
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(.tertiary)

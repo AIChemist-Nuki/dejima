@@ -1,20 +1,14 @@
 import AppKit
 import Foundation
 
-/// Asks GitHub whether there's a newer release.
-///
-/// This is the only code in Dejima that touches the network, and it only runs
-/// when someone asks for it: the menu item, or the daily check that is off by
-/// default. It sends nothing but the HTTP request itself — no text you
-/// translated, no identifier, no usage. Translation stays entirely on device
-/// either way.
+/// Checks GitHub releases manually or through an opt-in daily check.
+/// The request contains no translation text or usage data.
 @MainActor
 enum Updater {
     private static let repository = "AIChemist-Nuki/dejima"
     private static let automaticKey = "checkForUpdatesAutomatically"
     private static let lastCheckKey = "lastUpdateCheck"
 
-    /// Don't ask GitHub more than once a day on the automatic path.
     private static let interval: TimeInterval = 60 * 60 * 24
 
     private static var isChecking = false
@@ -28,13 +22,12 @@ enum Updater {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
     }
 
-    /// The menu item. Always reports back, including "nothing to do".
+    /// Manual checks also report failures and up-to-date results.
     static func checkNow() {
         check(announceResult: true)
     }
 
-    /// Called at launch. Silent unless there's something worth saying, and only
-    /// when the person opted in and we haven't looked today.
+    /// At launch, check if enabled and due; only announce available updates.
     static func checkInBackgroundIfDue() {
         guard checksAutomatically else { return }
         if let last = UserDefaults.standard.object(forKey: lastCheckKey) as? Date,
@@ -60,7 +53,6 @@ enum Updater {
                     presentUpToDate()
                 }
             } catch {
-                // A failed background check is not worth interrupting anyone.
                 if announceResult { presentFailure(error) }
             }
         }
@@ -73,7 +65,7 @@ enum Updater {
         var request = URLRequest(url: url)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 15
-        // A cached answer would hide a release published since the last look.
+        // Bypass cached release metadata.
         request.cachePolicy = .reloadIgnoringLocalCacheData
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -89,7 +81,6 @@ enum Updater {
         let tagName: String
         let htmlURL: URL
 
-        /// Tags are published as "v0.2.0"; only the number is comparable.
         var version: String {
             tagName.hasPrefix("v") ? String(tagName.dropFirst()) : tagName
         }
@@ -100,7 +91,7 @@ enum Updater {
         }
     }
 
-    /// Numeric comparison, so 0.10.0 correctly beats 0.9.0.
+    /// Compare numeric components so 0.10.0 sorts after 0.9.0.
     static func isNewer(_ remote: String, than local: String) -> Bool {
         remote.compare(local, options: .numeric) == .orderedDescending
     }
@@ -135,9 +126,7 @@ enum Updater {
         _ = runModal(alert)
     }
 
-    /// An agent app isn't frontmost and has no window to hang a sheet on, so
-    /// the alert needs the app brought up first or it appears behind whatever
-    /// you were reading.
+    /// Activate the agent app before presenting a modal alert.
     private static func runModal(_ alert: NSAlert) -> NSApplication.ModalResponse {
         NSApp.activate()
         return alert.runModal()

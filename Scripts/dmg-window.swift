@@ -1,44 +1,32 @@
 #!/usr/bin/env swift
 //
-// Draws and installs the guided windows of the release DMG.
+// Draws backgrounds and writes Finder layouts for the release DMG.
 //
-//   swift Scripts/dmg-window.swift art <output directory> <version>
-//   swift Scripts/dmg-window.swift layout <mounted volume> <newer folder> <older folder>
+//   swift Scripts/dmg-window.swift art <output directory> <version> <icon>
+//   swift Scripts/dmg-window.swift layout <mounted volume> <newer folder> <older folder> <icon>
 //
-// `art` draws the backgrounds as @1x/@2x pairs; release.sh pairs each into one
-// HiDPI TIFF. `layout` writes the .DS_Store files that tell Finder how big the
-// windows are, where the icons sit, and which background to draw behind them.
-//
-// Both halves live here because they are two views of one set of coordinates:
-// the arrow points at where the Applications alias is, and only this file
-// knows both. Everything is measured in window points from the top-left of
-// the window's content area — the same frame Finder positions icons in, and
-// the same one the background image is drawn into, one point to one point.
-//
-// Why not AppleScript, as every DMG recipe on the internet does? Finder on
-// macOS 26 and later accepts `set icon size`, `set arrangement` and `set
-// background picture` and then quietly writes its own defaults to .DS_Store
-// instead. Window bounds and icon positions still survive, so the usual
-// recipe half-works, which is worse than not working. Writing the file
-// ourselves is the part that can't be argued with.
+// `art` produces 1x/2x backgrounds for release.sh to combine into HiDPI TIFFs.
+// `layout` writes window settings and icon positions to .DS_Store.
+// Both use points measured from the top-left of the window's content area.
+// Writing .DS_Store directly avoids Finder discarding scripted view settings.
 
 import AppKit
 import Carbon
 
 // MARK: - Geometry
 
-/// The window you land in: two builds, pick one.
+/// Layout for the volume's root window.
 enum Root {
     static let size = CGSize(width: 660, height: 520)
     static let iconSize: CGFloat = 80
-    /// Icon centres. The captions drawn under each slot have to agree.
+    /// Keep icon centers aligned with the background captions.
     static let newer = CGPoint(x: 200, y: 292)
     static let older = CGPoint(x: 460, y: 292)
     static let readMe = CGPoint(x: 584, y: 452)
     static let slotWidth: CGFloat = 240
 }
 
-/// Inside either build: drag it across.
+/// Shared layout for the two build folders.
 enum Build {
     static let size = CGSize(width: 540, height: 360)
     static let iconSize: CGFloat = 96
@@ -48,27 +36,22 @@ enum Build {
 
 // MARK: - Palette
 
-/// The monogram's own palette — warm paper, near-black ink, and the vermilion
-/// of the mark for the one thing on screen that is an instruction.
 enum Palette {
     static let top = NSColor(srgbRed: 0.996, green: 0.990, blue: 0.976, alpha: 1)     // #FEFCF9
     static let bottom = NSColor(srgbRed: 0.937, green: 0.918, blue: 0.886, alpha: 1)  // #EFEAE2
     static let ink = NSColor(srgbRed: 0.086, green: 0.075, blue: 0.059, alpha: 1)     // #16130F
     static let muted = NSColor(srgbRed: 0.267, green: 0.243, blue: 0.212, alpha: 1)
     static let faint = NSColor(srgbRed: 0.420, green: 0.388, blue: 0.353, alpha: 1)   // #6B635A
-    static let rule = NSColor(srgbRed: 0.616, green: 0.573, blue: 0.494, alpha: 0.45) // #E3DDD2, ish
+    static let rule = NSColor(srgbRed: 0.616, green: 0.573, blue: 0.494, alpha: 0.45)
     static let card = NSColor(srgbRed: 1, green: 0.992, blue: 0.973, alpha: 0.72)     // #FFFDF8
     static let accent = NSColor(srgbRed: 0.663, green: 0.231, blue: 0.165, alpha: 1)  // #A93B2A
 }
 
 // MARK: - Type
 
-/// CJK glyphs differ between Chinese and Japanese, and the system font picks
-/// its fallback from the *renderer's* locale rather than from the text.
-/// Naming the family keeps the output the same whoever runs the release.
+/// Explicit font families keep CJK glyphs independent of the build locale.
 enum Script {
     case latin, chinese, japanese, korean
-    /// The wordmark, set in a mincho serif the way the logo sheet has it.
     case wordmark
 
     var family: String? {
@@ -85,9 +68,7 @@ enum Script {
 func font(_ size: CGFloat, _ weight: NSFont.Weight = .regular, _ script: Script = .latin) -> NSFont {
     let system = NSFont.systemFont(ofSize: size, weight: weight)
     guard let family = script.family else { return system }
-    // Built from a bare descriptor, not from the system font's: the system
-    // font's descriptor is a placeholder that quietly ignores a new family
-    // and hands the system font straight back.
+    // A system font descriptor can ignore family overrides.
     let descriptor = NSFontDescriptor(fontAttributes: [
         .family: family,
         .traits: [NSFontDescriptor.TraitKey.weight: weight.rawValue],
@@ -95,8 +76,7 @@ func font(_ size: CGFloat, _ weight: NSFont.Weight = .regular, _ script: Script 
     return NSFont(descriptor: descriptor, size: size) ?? system
 }
 
-/// Draws one line, positioned by its distance from the top of the canvas, so
-/// the drawing code and the icon positions can be read against each other.
+/// Positions text from the top of the canvas, matching Finder icon coordinates.
 func line(_ string: String,
           font: NSFont,
           color: NSColor,
@@ -154,8 +134,7 @@ func render(_ size: CGSize, scale: CGFloat, _ body: (CGSize) -> Void) -> Data {
         bytesPerRow: 0,
         bitsPerPixel: 0
     ) else { fail("could not allocate a \(size) bitmap") }
-    // Declaring the size in points is what makes the context scale for us, so
-    // the drawing code never has to know about @2x.
+    // Point dimensions let the context apply the pixel scale.
     representation.size = size
 
     NSGraphicsContext.saveGraphicsState()
@@ -198,9 +177,6 @@ func drawArt(into directory: URL, version: String, icon: NSImage) throws {
         line("사용 중인 macOS에 맞는 폴더를 여세요", font: font(12, .regular, .korean), color: Palette.muted,
              top: 216, width: canvas.width, canvas: canvas)
 
-        // A card per build, so the two read as a choice between two things
-        // rather than as two loose icons. The folder's own name carries the
-        // version range; the caption inside says what the range means.
         for (slot, chinese, english) in [
             (Root.newer, "系统是 macOS 26 或更新", "macOS 26 and later"),
             (Root.older, "系统是 macOS 15 到 25", "macOS 15 through 25"),
@@ -239,15 +215,12 @@ func drawArt(into directory: URL, version: String, icon: NSImage) throws {
         line("Dejima를 Applications로 드래그", font: font(12, .regular, .korean), color: Palette.muted,
              top: 100, width: canvas.width, canvas: canvas)
 
-        // A dashed target around the Applications alias: the arrow says to
-        // drag, this says how far.
         frame(top: Build.applications.y - 74, left: Build.applications.x - 82,
               width: 164, height: 156, canvas: canvas,
               fill: Palette.card,
               stroke: Palette.accent.withAlphaComponent(0.55), dashed: true)
 
-        // An arrow across the gap, short enough that neither the icons nor
-        // the target ever sit on it.
+        // Leave space between the arrow, icons and drop target.
         let start = Build.app.x + 66
         let end = Build.applications.x - 88
         let y = canvas.height - Build.app.y
@@ -276,10 +249,7 @@ func drawArt(into directory: URL, version: String, icon: NSImage) throws {
 /// A .DS_Store, which is a B-tree in a buddy allocator, holding one record
 /// per (file name, four-letter property) pair.
 ///
-/// Only a fraction of the format is implemented, and only as much as Finder
-/// needs to read back: a single leaf node holding every record, three blocks,
-/// no rebalancing, no updates in place. Anything more would be building a
-/// database to write one page.
+/// Writes a single leaf node in three blocks; no rebalancing or in-place updates.
 struct DSStore {
     enum Value {
         case blob(Data)
@@ -297,18 +267,15 @@ struct DSStore {
         set(name, code, .blob(data))
     }
 
-    /// How a directory's own window looks. Note whose file this goes in: a
-    /// folder's window settings are kept by its *parent*, filed under the
-    /// folder's name. Only the icon positions live in the folder itself. The
-    /// volume's own window is the "." entry of the .DS_Store at its root.
+    /// Window settings belong in the parent's .DS_Store under the folder name.
+    /// Icon positions belong in the folder itself. The volume uses the "." entry.
     mutating func window(_ name: String, size: CGSize, iconSize: CGFloat, background: URL) throws {
         try set(name, "bwsp", plist: windowSettings(size: size))
         try set(name, "icvp", plist: iconViewSettings(iconSize: iconSize, background: background))
         set(name, "vSrn", .long(1))
     }
 
-    /// Finder's icon position record: a centre point, then six bytes that are
-    /// always these six bytes.
+    /// Finder's icon position record: a center point and a fixed eight-byte suffix.
     mutating func place(_ name: String, at point: CGPoint) {
         var data = Data()
         data.append(uint32: UInt32(point.x))
@@ -318,9 +285,7 @@ struct DSStore {
     }
 
     func write(to url: URL) throws {
-        // Finder looks records up by binary search, so they have to be in the
-        // order it would have put them in: by name, case-insensitively, then
-        // by property code.
+        // Finder requires records sorted by case-insensitive name, then property code.
         let sorted = records.sorted { a, b in
             let left = a.name.lowercased(), right = b.name.lowercased()
             if left != right { return left < right }
@@ -444,10 +409,7 @@ extension Data {
 
 // MARK: - Window settings
 
-/// Finder wants the background image as an alias record — the pre-bookmark
-/// kind that no framework will make for you any more. The Apple Event manager
-/// still coerces a file URL into one, which is the last supported way to get
-/// the bytes.
+/// Finder stores backgrounds as alias records, obtained by coercing file URLs.
 func aliasRecord(for url: URL) -> Data {
     guard let alias = NSAppleEventDescriptor(fileURL: url).coerce(toDescriptorType: DescType(typeAlias)) else {
         fail("could not make an alias record for \(url.path)")
@@ -456,8 +418,7 @@ func aliasRecord(for url: URL) -> Data {
 }
 
 func windowSettings(size: CGSize) -> [String: Any] {
-    // Screen coordinates, bottom-left origin. Finder moves the window if it
-    // doesn't fit, so this is only where it prefers to open.
+    // Preferred screen bounds with a bottom-left origin; Finder may reposition them.
     [
         "WindowBounds": "{{180, 220}, {\(Int(size.width)), \(Int(size.height))}}",
         "ShowSidebar": false,
@@ -493,8 +454,6 @@ func iconViewSettings(iconSize: CGFloat, background: URL) -> [String: Any] {
 }
 
 func installLayout(volume: URL, newerFolder: String, olderFolder: String, icon: NSImage) throws {
-    // The mounted disk answers to the app's own icon rather than the generic
-    // white one, in the sidebar and on the desktop.
     NSWorkspace.shared.setIcon(icon, forFile: volume.path)
 
     let backgrounds = volume.appendingPathComponent(".background")
