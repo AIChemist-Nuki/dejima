@@ -4,12 +4,7 @@ import Foundation
 import FoundationModels
 #endif
 
-/// Optional second pass over the machine translation.
-///
-/// Apple's NMT model is fast and offline but flattens technical and academic
-/// prose. When Apple Intelligence is available, the on-device LLM gets the
-/// original and the draft and fixes terminology and phrasing. Still offline,
-/// still free, roughly a second slower. Off by default.
+/// Optional on-device revision using the source text and translation draft.
 enum Polisher {
     static var isAvailable: Bool {
         #if canImport(FoundationModels)
@@ -52,7 +47,7 @@ enum Polisher {
             let revised = response.content.trimmingCharacters(in: .whitespacesAndNewlines)
             return revised.isEmpty ? draft : revised
         } catch {
-            // A refusal, a context overflow, or no model — the draft is still fine.
+            // Keep the draft if revision fails or the model refuses the request.
             return draft
         }
         #else

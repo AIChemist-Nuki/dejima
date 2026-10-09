@@ -8,13 +8,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         controller.start()
-        // No-op unless the person opted in, and at most once a day.
         Updater.checkInBackgroundIfDue()
     }
 }
 
-/// Owns every moving part and connects them:
-/// DoubleCopyMonitor -> LanguageRouter -> TranslationHub -> ResultPanel
+/// Coordinates copy monitoring, language routing, translation, and results.
 @MainActor
 final class Controller: ObservableObject {
     let hub = TranslationHub()
@@ -27,13 +25,10 @@ final class Controller: ObservableObject {
     private var panel: ResultPanel?
     private var guide: PermissionGuide?
     private var currentJob: Task<Void, Never>?
-    /// Bumped per request. A superseded translation can still be mid-chunk
-    /// inside the hub, and its partial results must not land in the panel.
+    /// Reject partial results from superseded requests, even if cancellation is delayed.
     private var generation = 0
 
     func start() {
-        // Whatever the hub needs to be ready. The macOS 15 build puts a hidden
-        // window on screen here; the macOS 26 build does nothing.
         hub.start()
         panel = ResultPanel(model: result)
 
@@ -44,8 +39,6 @@ final class Controller: ObservableObject {
         if hasAccessibility {
             enableMonitoring()
         } else {
-            // Without this permission the app can do nothing at all, so the
-            // first run is the guide.
             showPermissionGuide()
         }
     }
@@ -56,9 +49,7 @@ final class Controller: ObservableObject {
         hasAccessibility = AXIsProcessTrusted()
     }
 
-    /// The system prompt only appears the first time; after that it silently
-    /// returns the current state. Either way the guide is what actually gets
-    /// anyone through this, so it follows.
+    /// Show the guide if access is denied, since the system prompt may not reappear.
     func requestPermission() {
         let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         let granted = AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
@@ -75,8 +66,7 @@ final class Controller: ObservableObject {
             guide = PermissionGuide { [weak self] in
                 guard let self else { return }
                 self.hasAccessibility = true
-                // Installs the monitors fresh, which is what makes the grant
-                // take effect without relaunching.
+                // Reinstall monitors so the permission takes effect without relaunching.
                 self.enableMonitoring()
             }
         }
@@ -103,16 +93,13 @@ final class Controller: ObservableObject {
 
     // MARK: - Translation flow
 
-    /// Re-runs the last translation, e.g. after the user flips the language pair.
     func retranslate() {
         guard !result.sourceText.isEmpty else { return }
         handle(result.sourceText)
     }
 
     private func handle(_ text: String) {
-        // Copied from a PDF, the text arrives broken at the margin. Repair it
-        // before anything else looks at it: language detection, the translator
-        // and the original shown in the panel all want the real paragraphs.
+        // Normalize PDF line wraps before detection, translation, and display.
         let trimmed = TextCleaner.unwrap(text).trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 

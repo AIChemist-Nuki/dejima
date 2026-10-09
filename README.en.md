@@ -1,170 +1,78 @@
 # Dejima
 
-Select text, press ⌘C twice, and the translation appears next to your pointer. Translation happens entirely on device — nothing you translate goes through a server.
+A macOS menu bar translator. Select text and press ⌘C twice to show a translation near the pointer.
 
 [简体中文](README.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
 
-Dejima lives in the menu bar — no Dock icon, no main window. Translation goes through macOS's built-in Translation framework, and the language models are shared system-wide: anything you downloaded for the Translate app works here, and the other way around.
+Dejima uses Apple's Translation framework and runs without a Dock icon or main window. Translation runs on device after the required language models are downloaded.
 
-Reading a paper in a language you're still learning, the loop is: select → switch to a translator → paste → read → switch back. That friction is enough to make you skip the word you didn't understand. Dejima collapses it into a gesture already in your muscle memory: ⌘C ⌘C. And since your clipboard holds unpublished drafts, other people's messages, and internal documents, staying offline is a hard requirement.
+## Install
 
-## About the name
+Download `Dejima-<version>.dmg` from [Releases](https://github.com/AIChemist-Nuki/dejima/releases/latest). Open the folder for your system and drag `Dejima.app` to Applications.
 
-Dejima was an artificial island in the harbour of Nagasaki. Through the two centuries Japan spent closed to the outside world, it was the country's only channel for foreign trade — a very small port, but everything from outside came through it.
+| macOS version | Folder in the DMG |
+|---|---|
+| 26 or later | macOS 26 or later |
+| 15 to 25 | macOS 15 to 25 |
 
-## Download
-
-Grab `Dejima-<version>.dmg` from [Releases](https://github.com/AIChemist-Nuki/dejima/releases/latest). Open it, open “macOS 26 or later” or “macOS 15 to 25” to match your system, and drag the `Dejima.app` inside onto the Applications alias beside it.
-
-Getting it wrong is harmless: macOS refuses to launch a build that needs a newer system and tells you which one you need.
-
-The two builds are identical in features. They differ only in how they ask the system for a translation session: the macOS 26 API creates one directly, which avoids a hidden window parked in the corner of the screen, at the cost of raising an error when a language pack is missing instead of opening the system's download prompt. Both share a bundle identifier, so switching between them keeps your Accessibility grant, login item and settings.
-
-You'll also need to grant Accessibility permission, which is what lets Dejima watch for ⌘C. The optional refine pass additionally needs Apple Intelligence and macOS 26 or later.
+Launch the app from Applications before granting permissions.
 
 ## First run
 
-**1. Grant Accessibility access.** Launching without the permission opens a guide window: click the button to open the Accessibility pane, then **drag the Dejima icon from the window straight into the list** and switch it on.
+1. Follow the Accessibility guide. Open System Settings, drag the Dejima icon from the guide into the Accessibility list, and enable it. This permission lets the app detect ⌘C.
+2. Choose **Check language models…** in the menu bar menu. In System Settings, download the languages you need.
+3. Select some text and press ⌘C twice in quick succession.
 
-What you drag is the running bundle itself, so you can't add the wrong one. The grant is bound to a specific bundle: an alias, or a second copy still in Downloads, will look like it worked and do nothing. If the app isn't in Applications yet, the guide warns you to move it first — moving it afterwards invalidates the grant.
+The guide closes and monitoring starts when permission is granted. If translation does not start, check that Accessibility access is enabled for the copy of Dejima you are running and that monitoring is not paused.
 
-The window closes itself once the switch is on, and monitoring starts immediately; a relaunch usually isn't needed. To open the guide again: menu bar icon → `Grant Accessibility access…`.
+The macOS 26 build reports an error if a language model is missing. The older build can request a download, but its system prompt may be hard to find. Downloading models before use avoids this.
 
-**2. Download the language models.** `Check language models…` in the menu opens the Translation Languages pane in System Settings. Grab one per language you need. Each pack is 1–3 GB.
+## Use
 
-Without a model, the first translation triggers the system's download prompt — but since the host window is invisible, that prompt can end up in an odd place and behave strangely. Better to download ahead of time.
+Set a primary and secondary language in the menu:
 
-**3. Try it.** Select a sentence in a foreign language and press ⌘C twice.
-
-## Which way it translates
-
-Two settings in the menu, and between them they cover both everyday cases:
-
-| Detected language | Translated into |
+| Source text | Translation |
 |---|---|
-| Japanese / English / anything else | Primary language (default: Simplified Chinese) |
-| The primary language itself | Secondary language (default: Japanese) |
-| Couldn't tell | Primary language, with the source left for the framework to guess |
+| In the primary language | Secondary language |
+| In another language | Primary language |
 
-So Japanese and English both become Chinese, while Chinese becomes Japanese. Reading papers and drafting a reply both work without touching a setting.
+The defaults are Simplified Chinese and Japanese. For example, English and Japanese translate into Chinese; Chinese translates into Japanese. Short text can be difficult to identify correctly.
 
-Detection uses `NLLanguageRecognizer`. Its guesses on short strings aren't trustworthy, so there's a gate: the result counts only if confidence is above 0.4 or the text is longer than 12 characters. For routing purposes, `zh-Hans` and `zh` are the same language. The offered languages live in `LanguageRouter.choices` — currently Simplified and Traditional Chinese, Japanese, English, Korean, German, French, Spanish, and Russian; trim or extend to taste.
+Use the panel's copy button to copy the translation. Click outside the panel or press Esc to close it. Pin the panel to keep it open when clicking elsewhere; Esc still closes it. Monitoring can be paused from the menu.
 
-The panel has a copy button. Click outside it or press Esc to dismiss.
+The interface follows the system language and supports English, Simplified Chinese, Japanese, and Korean. Other system languages use English.
 
-## Interface language
+### Optional refinement
 
-Follows the system language: Simplified Chinese, Japanese, Korean and English, with no separate setting; anything else falls back to English. What gets translated is unaffected — that's the language pair above.
+**Refine with Apple Intelligence** is available on macOS 26 or later when the on-device model is ready. It is off by default.
 
-## What touches the network
+When enabled, it reviews the source text and draft translation to revise the wording. Results can vary. If refinement fails or returns an empty result, Dejima keeps the draft.
 
-**Nothing you translate ever leaves the machine.** Translation goes through the local Translation framework, refinement through on-device Apple Intelligence. Neither one connects to anything.
+## Privacy and updates
 
-Exactly one thing in the app makes a network request: the update check, which asks GitHub's releases API for the latest version number.
+Translation and refinement run on device. Downloading language models requires an internet connection.
 
-- `Check for updates…` fires once, when you pick it
-- `Check for updates automatically` is **off by default**; turned on, it looks at most once a day, at launch
-- The request carries nothing beyond the HTTP call itself — no identifier, no usage, and certainly none of your text
+Update checks contact GitHub's releases API. They do not include translated text, usage reports, or an app-generated identifier.
 
-The code is in `Sources/Updater.swift`, under 180 lines. If you'd rather not have it, leave both settings off or delete the file.
+- **Check for updates…** starts a manual check.
+- **Check for updates automatically** is off by default. When enabled, Dejima checks at launch if at least 24 hours have passed since the last successful check. Failed checks may be retried on a later launch.
 
-## Building
+The update code is in [Sources/Updater.swift](Sources/Updater.swift).
 
-Needs Xcode 16 or later, plus XcodeGen:
+## Build
+
+Use Xcode 26 or later with the macOS 26 SDK or later, and XcodeGen. From the repository root:
 
 ```bash
-brew install xcodegen   # if you don't have it
+brew install xcodegen
 xcodegen generate
 open Dejima.xcodeproj
 ```
 
-The scheme picker will offer `Dejima` and `Dejima26`; choose one and ⌘R. From the command line:
+Choose the `Dejima` or `Dejima26` scheme, configure signing, then run. See [Development](docs/Development.md) for target differences, signing, and release packaging.
 
-```bash
-xcodebuild -scheme Dejima   -configuration Release build   # macOS 15+
-xcodebuild -scheme Dejima26 -configuration Release build   # macOS 26+
-```
+## About
 
-`Dejima26` builds to `Dejima26.app` purely so the two targets don't overwrite each other; packaging renames it to `Dejima.app`.
+The name comes from Dejima, an artificial island in Nagasaki.
 
-`DEVELOPMENT_TEAM` in `project.yml` is the author's own Team ID. Replace it with yours, or switch to "Sign to Run Locally" under Signing & Capabilities. **Use a stable signing identity**: the Accessibility grant is tied to the bundle ID plus the code signature, so an ad-hoc signature loses the permission on every rebuild.
-
-Without XcodeGen, set it up by hand:
-
-1. Xcode → New Project → macOS → App, Interface: SwiftUI, name it `Dejima`
-2. Delete the generated `ContentView.swift` and `DejimaApp.swift`
-3. Drag in the files at the root of `Sources/`, plus `Localizable.xcstrings`, `InfoPlist.xcstrings` and `Assets.xcassets`, plus **one** of `TranslationLegacy/` or `Translation26/` (macOS 15 and 26 respectively)
-4. Target → Info, add `Application is agent (UIElement)` = `YES`
-5. Target → Signing & Capabilities, **remove App Sandbox** (the sandbox and global key monitoring don't get along)
-
-## Packaging a release
-
-```bash
-CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
-NOTARY_PROFILE=dejima \
-./Scripts/release.sh
-```
-
-That leaves `dist/Dejima-<version>.dmg`, holding one folder per minimum macOS version, each with a `Dejima.app` and an Applications alias:
-
-```
-Dejima 0.2.0
-├── macOS 15-25.localized/
-│   ├── Dejima.app
-│   └── Applications →
-├── macOS 26+.localized/
-│   ├── Dejima.app
-│   └── Applications →
-└── Read Me.txt
-```
-
-Both are named `Dejima.app`; the folder is what distinguishes them, so nothing lands in `/Applications` with a version number stuck to its name.
-
-The folders end in `.localized`: Finder hides the suffix and shows each folder under a name in the reader's system language (Chinese, English, Japanese, Korean; English for anything else). The names are set by `localize_folder` in `release.sh`.
-
-**Signing is not optional.** The Apple Development certificate the project defaults to only runs on your own machine; Gatekeeper blocks it for everyone who downloads it. Publishing needs a Developer ID Application certificate plus notarization. Store the notary credentials once:
-
-```bash
-xcrun notarytool store-credentials dejima \
-  --apple-id you@example.com --team-id TEAMID --password <app-specific-password>
-```
-
-The script runs without those two variables too; you just get a DMG only you can open, and it says so when it finishes.
-
-**Every release**, bump `MARKETING_VERSION` in `project.yml` (both targets share the one template) and tag as `v0.1.0`. The update check compares against the version inside the bundle.
-
-## Code layout
-
-| File | Responsibility |
-|---|---|
-| `DejimaApp` | `@main` entry point, `MenuBarExtra` |
-| `Controller` | `AppDelegate` plus the wiring: permission, monitor toggling, translation orchestration |
-| `DoubleCopyMonitor` | Global key monitoring, double-press detection, pasteboard reading |
-| `LanguageRouter` | Language detection and direction decisions |
-| `TranslationLegacy/TranslationHub` | macOS 15 build: wraps Apple's view-bound API as a plain `async` function; owns the hidden host window |
-| `Translation26/TranslationHub` | macOS 26 build: creates a session directly. Same API, no window |
-| `Polisher` | Optional Apple Intelligence refinement |
-| `PermissionGuide` | The Accessibility onboarding window, with the draggable app icon |
-| `TextCleaner` | Repairs hard line breaks from PDF copies |
-| `LoginItem` | Launch at login |
-| `Updater` | The update check — the only networking in the app |
-| `ResultPanel` | `ResultModel` plus the non-activating floating panel |
-| `ResultView` | Panel contents: translation on top, original underneath |
-| `MenuBarView` | Menu contents |
-| `DejimaMark` | The 出 mark, which is also the menu bar icon |
-
-`Scripts/` holds the app icon (`app-icon.swift`), the DMG window backgrounds and layout (`dmg-window.swift`), and the packaging script (`release.sh`).
-
-## Possible additions
-
-- A glossary that pins chosen terms to fixed translations, fed to the refine instructions
-- Making "Refine with Apple Intelligence" dependable. Apple's NMT model is fast and offline, but it flattens technical and academic prose; with this on, the on-device LLM receives the original and the draft, fixes terminology and phrasing, and is told to leave proper nouns, gene and protein names, chemical names, units, and citations exactly as written. Still offline, roughly a second slower, and anything that goes wrong silently falls back to the draft — but the results aren't consistent enough yet, so it's off by default
-
-## License
-
-MIT, see [LICENSE](LICENSE).
-
-## References
-
-- WWDC24 "Meet the Translation API" — the official word on `translationTask` and `Configuration.invalidate()`
-- [SwiftyCrow](https://github.com/PangMo5/SwiftyCrow) — an open-source screenshot translator on the same framework; worth comparing how it handles model downloads
+MIT licensed. See [LICENSE](LICENSE).

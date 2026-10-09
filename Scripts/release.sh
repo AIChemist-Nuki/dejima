@@ -5,36 +5,22 @@
 #   ./Scripts/release.sh 0.3.0    tag HEAD as v0.3.0, then build it
 #   ./Scripts/release.sh          build the version HEAD is already tagged with
 #
-# VERSION. The git tag is the only source of the version number: it is what
-# the GitHub release is published under and what Updater.swift compares
-# against, so the app reads the same thing. The build number is the commit
-# count, which only ever goes up. Nothing is edited or committed to bump a
-# version; the tag is created locally and pushing it is left to you:
+# Uses the git tag for the version and the commit count for the build number.
+# Requires a clean working tree. Tags are created locally; push them separately:
 #
 #   git push origin main v0.3.0
 #
-# The working tree has to be clean, so that the DMG is exactly the tagged
-# commit and not whatever happened to be lying around uncommitted.
+# Each macOS build is packaged as Dejima.app in its own folder.
+# Scripts/dmg-window.swift generates the backgrounds and Finder layouts.
 #
-# The DMG holds two folders, one per minimum macOS version, each with a
-# Dejima.app and an Applications alias to drag it onto. Both apps are named
-# Dejima.app — the folder is what tells them apart, so nothing ends up in
-# /Applications with a version number stuck to its name.
-#
-# Every window is laid out over a drawn background that says what to do, so
-# the Read Me is there for the curious rather than for the confused. Both the
-# drawing and the layout come out of Scripts/dmg-window.swift.
-#
-# SIGNING. Without arguments this signs with whatever the project is set to,
-# which is an Apple Development certificate: fine on your own machine, refused
-# by Gatekeeper everywhere else. A build other people can open needs a
-# Developer ID certificate and notarization:
+# Public distribution requires Developer ID signing and notarization.
+# Otherwise the script uses the project's signing settings:
 #
 #   CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 #   NOTARY_PROFILE=dejima \
 #   ./Scripts/release.sh
 #
-# Create the notary profile once, beforehand:
+# Store notarization credentials before publishing:
 #
 #   xcrun notarytool store-credentials dejima \
 #     --apple-id you@example.com --team-id TEAMID --password <app-specific-password>
@@ -76,26 +62,22 @@ STAGE="$BUILD/dmg"
 DIST="$PWD/dist"
 DMG="$DIST/Dejima-$VERSION.dmg"
 
-# The folder names are load-bearing: the DMG layout positions icons by name.
-# The .localized suffix has Finder hide it and show each folder under a name in
-# the reader's own language instead; see localize_folder below.
+# The layout uses these names to position icons. Finder displays localized
+# names from the .localized directories created below.
 FOLDER_NEW="macOS 26+.localized"
 FOLDER_OLD="macOS 15-25.localized"
 
-# The app icon, drawn by Scripts/app-icon.swift, reused for the DMG.
 ICON="$PWD/Assets.xcassets/AppIcon.appiconset/icon_512.png"
 
 command -v xcodegen >/dev/null || { echo "error: xcodegen not installed (brew install xcodegen)" >&2; exit 1; }
 
-# Run something noisy, and only show its output if it actually fails.
+# Show command output only on failure.
 quiet() {
     local log="$BUILD/step.log"
     "$@" >"$log" 2>&1 || { echo "error: $1 failed" >&2; cat "$log" >&2; exit 1; }
 }
 
-# Run one of the script-mode Swift tools below. The module cache goes with the
-# rest of the build rather than into the shared one under $TMPDIR, which the
-# script is not always allowed to write to.
+# Keep the Swift module cache inside the writable build directory.
 swift_tool() {
     quiet swift -module-cache-path "$BUILD/module-cache" "$@"
 }
@@ -115,8 +97,7 @@ build_one() {
         -scheme "$scheme"
         -configuration Release
         -derivedDataPath "$BUILD/dd-$scheme"
-        # Lets automatic signing fetch or create a certificate the way Xcode
-        # does, instead of failing on a revoked or missing one.
+        # Allow Xcode to update signing assets when using automatic signing.
         -allowProvisioningUpdates
         "MARKETING_VERSION=$VERSION"
         "CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
@@ -148,9 +129,7 @@ build_one() {
 build_one Dejima   Dejima   "$FOLDER_OLD"
 build_one Dejima26 Dejima26 "$FOLDER_NEW"
 
-# $1 folder, then pairs of language and the name Finder shows in it. Finder
-# looks the folder's name, minus .localized, up in .localized/<language>.strings
-# inside it; a reader with none of these languages gets the English one.
+# $1 folder, followed by language/name pairs for Finder's .localized lookup.
 localize_folder() {
     local folder="$1"; shift
     local key="${folder%.localized}"
@@ -168,8 +147,7 @@ localize_folder "$FOLDER_OLD" en "macOS 15 to 25" zh-Hans "macOS 15 到 25" \
 echo "==> Drawing the window backgrounds"
 mkdir -p "$STAGE/.background"
 swift_tool Scripts/dmg-window.swift art "$STAGE/.background" "$VERSION" "$ICON"
-# Finder takes one file per window, so each pair of sizes becomes a single
-# HiDPI TIFF. Anything else is drawn at 1x and looks soft on a Retina display.
+# Combine 1x and 2x backgrounds into a single HiDPI TIFF for Finder.
 for art in root folder; do
     quiet tiffutil -cathidpicheck \
         "$STAGE/.background/$art.png" "$STAGE/.background/$art@2x.png" \
@@ -177,10 +155,7 @@ for art in root folder; do
     rm -f "$STAGE/.background/$art.png" "$STAGE/.background/$art@2x.png"
 done
 
-# Most people never open this; the folder names carry the decision. It's here
-# for the ones who do.
-# The Apple logo is a private-use character (U+F8FF) that editors and copy-paste
-# tend to drop, so it goes in by its bytes rather than typed into the text.
+# Encode the Apple logo (U+F8FF) explicitly to preserve it in source editors.
 APPLE_LOGO=$(printf '\xef\xa3\xbf')
 cat > "$STAGE/Read Me.txt" <<EOF
 Dejima $VERSION
@@ -273,19 +248,15 @@ macOS 버전을 모르겠다면: 화면 왼쪽 위의 ${APPLE_LOGO} → 이 Mac�
 EOF
 
 echo "==> Creating $DMG"
-# Built in three steps rather than one `hdiutil create -srcfolder`, because
-# that is broken on macOS 27 — it fails with ENOTEMPTY even for a blank image.
-# `diskutil image create` works but cannot produce a compressed image from a
-# folder, so: make a writable one large enough, fill it, convert it.
+# Create, populate, then compress the image to avoid the ENOTEMPTY error
+# encountered with hdiutil create -srcfolder on macOS 27.
 RW="$BUILD/rw.dmg"
 rm -f "$DMG" "$RW"
 
 SIZE=$(( $(du -sm "$STAGE" | cut -f1) * 3 / 2 + 50 ))
 quiet diskutil image create blank --size "${SIZE}m" --volumeName "Dejima $VERSION" "$RW"
 
-# Mounted under /Volumes rather than at a private mount point: the window
-# backgrounds are referenced by an alias record, and one made against a
-# private path is a worse bet at open time than one made against /Volumes.
+# Use the default volume mount location for Finder's background alias records.
 MOUNT=$(hdiutil attach "$RW" -nobrowse -noverify -noautoopen | sed -n 's|.*\(/Volumes/.*\)$|\1|p' | head -1)
 [ -n "$MOUNT" ] || { echo "error: could not tell where $RW mounted" >&2; exit 1; }
 

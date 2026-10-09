@@ -6,8 +6,7 @@ struct MenuBarView: View {
     @State private var primary = LanguageRouter.primary
     @State private var secondary = LanguageRouter.secondary
     @AppStorage("polishWithAppleIntelligence") private var polish = false
-    /// Mirrors the Service Management status, which is the real source of
-    /// truth — the system can revoke this from Login Items at any time.
+    /// Read system status because login registration can change outside the app.
     @State private var launchAtLogin = LoginItem.isEnabled
     @State private var autoUpdate = Updater.checksAutomatically
 
@@ -17,8 +16,7 @@ struct MenuBarView: View {
             Divider()
         }
 
-        // Two separate literals rather than a ternary, so both reach the
-        // String Catalog.
+        // Keep separate literals so both labels are extracted into the String Catalog.
         if controller.isMonitoring {
             Button {
                 controller.toggleMonitoring()
@@ -80,30 +78,21 @@ struct MenuBarView: View {
             .keyboardShortcut("q")
     }
 
-    /// Puts a dimmed hint after a menu title, matched to the size and grey of
-    /// the key equivalents down the right-hand side.
-    ///
-    /// It can't be one of those. macOS reserves that column for real single
-    /// shortcuts, and ⌘C ⌘C is a double press the app watches for globally —
-    /// `.keyboardShortcut` can't express it, and asking for plain ⌘C would
-    /// both claim that key from the open menu and describe the wrong gesture.
-    /// So the hint sits inline, and only has to not look out of place.
+    /// Display the double-copy gesture inline; keyboardShortcut cannot express it
+    /// and registering ⌘C would intercept copy while the menu is open.
     private func hinted(_ title: String, _ shortcut: String) -> AttributedString {
-        // Left to itself the hint comes out at the ordinary system size,
-        // visibly smaller than the menu around it.
+        // Match the menu font instead of the default attributed-string size.
         let size = NSFont.menuFont(ofSize: 0).pointSize
         var text = AttributedString(title)
         text.font = .system(size: size)
         var hint = AttributedString("  \(shortcut)")
         hint.font = .system(size: size)
-        // .secondary is a good deal darker than a key equivalent.
         hint.foregroundColor = Color(nsColor: .tertiaryLabelColor)
         text.append(hint)
         return text
     }
 
-    /// Apple's models are downloaded per language pair and shared system-wide,
-    /// so send people to the one place that manages them.
+    /// Language models are managed system-wide in Language & Region settings.
     private func openTranslationSettings() {
         let url = URL(string: "x-apple.systempreferences:com.apple.Localization-Settings.extension")!
         NSWorkspace.shared.open(url)
