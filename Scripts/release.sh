@@ -276,6 +276,12 @@ hdiutil detach "$MOUNT" >/dev/null 2>&1 || hdiutil detach "$MOUNT" -force >/dev/
 quiet diskutil image create from "$RW" --format UDZO "$DMG"
 rm -f "$RW"
 
+if [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
+    # Gatekeeper checks the DMG itself when it is opened, not only the apps in it.
+    echo "==> Signing the DMG"
+    codesign --sign "$CODE_SIGN_IDENTITY" --timestamp "$DMG"
+fi
+
 if [ -n "${NOTARY_PROFILE:-}" ]; then
     echo "==> Notarizing"
     xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
