@@ -106,6 +106,10 @@ build_one() {
         # Developer ID needs no provisioning profile for a non-sandboxed app
         # distributed outside the App Store, so manual signing is enough.
         args+=(CODE_SIGN_STYLE=Manual "CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY")
+        # Notarization rejects what `xcodebuild build` does by default but
+        # `archive` doesn't: a signature without a secure timestamp, and the
+        # get-task-allow entitlement it injects so a debugger can attach.
+        args+=(OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO)
     fi
     xcodebuild "${args[@]}" build >"$BUILD/$scheme.log" 2>&1 || {
         echo "error: $scheme failed to build. Tail of $BUILD/$scheme.log:" >&2
