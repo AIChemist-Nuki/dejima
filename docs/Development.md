@@ -36,6 +36,30 @@ The `Dejima26` target produces `Dejima26.app` to avoid overwriting the other tar
 
 Optional refinement uses Foundation Models when available on macOS 26 or later. Both targets include the same refinement code.
 
+## Verify Apple Intelligence use
+
+Dejima has two distinct model paths:
+
+- **Draft translation:** `TranslationSession` chooses its default strategy because Dejima does not explicitly select one. On macOS 26.4 or later, inspect `session.preferredStrategy` and the build SDK. Apple's [`highFidelity`](https://developer.apple.com/documentation/translation/translationsession/strategy/highfidelity) strategy prefers Apple Intelligence models and can fall back to traditional models. Existing Apple Intelligence models may satisfy the requirement without separate language downloads. A preferred strategy alone does not identify the model that handled a particular request.
+- **Additional refinement:** the **Refine with Apple Intelligence** switch controls a separate `LanguageModelSession` call in `Polisher.swift`, after the draft is complete. It is off by default and requires `SystemLanguageModel.default.availability` to be `.available`. Turning it off does not force the draft translation to avoid Apple Intelligence.
+
+Read the saved refinement preference without changing it:
+
+```bash
+defaults read com.nuki.Dejima polishWithAppleIntelligence
+```
+
+An unset key uses the default `false`. The running app also checks model availability. To confirm an individual request, use a Debug build with the intended signing identity and synthetic text:
+
+1. Enable **Refine with Apple Intelligence** and translate the sample. In `Controller.swift`, confirm that `Polisher.isEnabled` is true before `result.beginRefining()`.
+2. Set a breakpoint at `session.respond(to:)` in `Polisher.swift` to confirm that the additional request starts.
+3. Inspect `response.content` after the await completes, and compare the trimmed `revised` value with `draft`. A nonempty identical response is still a successful model call. An empty response returns the draft.
+4. Set another breakpoint in the `catch` block and inspect `error` to distinguish a failed request from successful unchanged output. The current app silently keeps the draft on failure.
+
+The temporary **Refining…** label shows that the step started; it does not certify success. The final interface does not retain a refinement outcome, so the displayed text alone cannot distinguish disabled, unchanged, or failed refinement.
+
+For timing and request inspection, use Apple's [Foundation Models instrument](https://developer.apple.com/documentation/FoundationModels/analyzing-the-runtime-performance-of-your-foundation-models-app). Use synthetic text for traces because they can contain prompts and responses. A standalone probe can verify model availability and the helper's behavior, but cannot establish that a previous request in the installed app used refinement.
+
 ## Source layout
 
 - `Sources/Controller.swift` connects permissions, key monitoring, translation, and the result panel.

@@ -2,9 +2,9 @@
 
 # Dejima
 
-**Stay with what you're reading.**
+**Local translation on your Mac. Just press ⌘C twice.**
 
-Select text and press ⌘C twice. See the translation beside your pointer, without losing your place.
+Select text and press ⌘C twice to see the translation beside your pointer. Dejima works without an app's right-click Translate menu or switching apps. Once the required models are ready, you can translate offline.
 
 [简体中文](README.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
 
@@ -28,7 +28,7 @@ Follow the app's guide to open the Accessibility list in System Settings. Drag D
 
 Dejima lives in the menu bar, with no Dock icon or main window. Click its menu bar icon and choose your usual languages under **Translate into** and **Unless it already is, then**.
 
-Choose **Check language models…** to open **Language & Region** in System Settings. Click **Translation Languages…** and download both the source and target languages. Once downloaded, translations can run offline on your Mac.
+If translation reports a missing language, choose **Check language models…** to open **Language & Region** in System Settings. Click **Translation Languages…** and download both the source and target languages. If translation already works, no extra downloads are needed.
 
 <img src="docs/images/languages.jpg" alt="Translation language downloads in macOS System Settings, in English" width="420">
 
@@ -42,8 +42,10 @@ Select a passage you can copy in a webpage or document. Hold ⌘ and quickly pre
 
 - **Automatic direction.** Text in the primary language translates into the secondary; other text translates into the primary. The defaults are Simplified Chinese and Japanese. Short text may be misidentified.
 - **Copy or pin.** Copy the translation with the copy button, or pin the panel to keep it open when clicking elsewhere. Esc still closes it.
-- **Optional refinement.** **Refine with Apple Intelligence** is off by default and appears only on macOS 26 or later with an available model. If refinement fails, the draft translation is kept.
+- **Extra refinement.** **Refine with Apple Intelligence** adds a separate pass after translation. It is off by default and appears only on macOS 26 or later with an available model. If refinement fails, the draft translation is kept.
 - **Interface language.** Follows your system language: English, Simplified Chinese, Japanese, or Korean. Other languages fall back to English.
+
+See the [translation app comparison](docs/Comparison.md).
 
 <details>
 <summary>Nothing happens after pressing ⌘C twice?</summary>
@@ -57,6 +59,10 @@ Check that the text can be copied, that the running copy of Dejima has Accessibi
 Translation and refinement run on device. Language model downloads need internet access.
 
 Update checks contact GitHub without sending translated text, usage reports, or an app-generated identifier. Automatic checks are off by default. When enabled, they run at launch if 24 hours have passed since the last successful check; failures may be retried on the next launch.
+
+## About the name
+
+Dejima is named after the [artificial island in Nagasaki](https://nagasakidejima.jp/history/) that served as a gateway for trade, knowledge, and cultural exchange between Japan and Western Europe during the Edo period.
 
 ## Development
 
