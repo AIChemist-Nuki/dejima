@@ -41,7 +41,7 @@ Select a passage you can copy in a webpage or document. Hold ⌘ and quickly pre
 
 **If a language model is missing**
 
-If a translation appears, skip the downloads. If macOS prompts you to download languages, follow that prompt. If Dejima says a language pair has not been downloaded:
+If a translation appears, skip the downloads. Newer systems may use Apple Intelligence models that are already available. If macOS prompts you to download languages, follow that prompt. If Dejima says a language pair has not been downloaded:
 
 1. Choose **Translation language settings…** in the Dejima menu to open **Language & Region** in System Settings. This button only opens settings; it does not download anything.
 2. Click **Translation Languages…**, then **Download** beside both the source and target languages named in the message. For English to Simplified Chinese, you need both English and Simplified Chinese.
