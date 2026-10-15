@@ -1,25 +1,77 @@
+<img src="Assets.xcassets/AppIcon.appiconset/icon_128.png" alt="Dejima" width="64" align="right">
+
 # Dejima
 
-macOS 菜单栏翻译工具。选中文字，连按两下 ⌘C，在鼠标旁查看译文。
+**Mac 本地翻译，双按 ⌘C 就能用。**
+
+选中文字，连按两次 ⌘C，译文出现在鼠标旁。Dejima 不依赖应用的右键翻译菜单，也不用切换应用；所需模型准备好后即可离线使用。
 
 [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
 
-## 安装
+![Dejima 的英译中结果浮窗](docs/images/translation.jpg)
 
-需要 macOS 15 或更新版本。从 [Releases](https://github.com/AIChemist-Nuki/dejima/releases/latest) 下载 DMG，打开对应系统版本的文件夹，将 `Dejima.app` 拖到 Applications。
+*Dejima v0.2.8，英语界面。*
 
-1. 启动 Dejima，按引导将它加入系统设置的辅助功能列表并开启权限。
-2. 在菜单中选择「查看语言模型…」，下载需要的语言。
-3. 选中文字，快速连按两下 ⌘C。
+**[下载 Dejima](https://github.com/AIChemist-Nuki/dejima/releases/latest)** · macOS 15 或更新版本
 
-应用常驻菜单栏，没有 Dock 图标或主窗口。没有反应时，检查当前运行的 Dejima 是否获得辅助功能权限，以及监听是否已暂停。
+## 三步开始
 
-## 使用
+### 1. 安装并授权
 
-- 在菜单中设置主语言和备用语言。原文是主语言时译为备用语言，其他情况译为主语言。默认分别为简体中文和日语。短文本可能识别不准。
-- 点复制按钮复制译文，点浮窗外或按 Esc 关闭。固定浮窗后，点击外部不会关闭，仍可按 Esc 关闭。
-- 「用 Apple Intelligence 润色」默认关闭，需要 macOS 26 或更新版本和可用的 Apple Intelligence 模型。润色失败时保留初译。
-- 界面跟随系统语言，支持简体中文、英语、日语和韩语，其他语言使用英语。
+打开下载的 DMG，选择与你的系统对应的文件夹：「macOS 15 到 25」或「macOS 26 或更新」。将 `Dejima.app` 拖到 Applications 后再启动。
+
+按应用引导打开系统设置的辅助功能列表，将 Dejima 拖入列表并开启权限。授权成功后，引导会继续到语言选择。
+
+### 2. 选择翻译方向
+
+在引导中设置两个选项：
+
+- **译成**：通常希望看到的译文语言。
+- **如果已经是，就译成**：原文已经是上面的语言时，改译成哪种语言。
+
+例如，分别选择「简体中文」和「英语」：英文会译成中文，中文会译成英文。原文语言会自动识别，无需设置。
+
+默认是「简体中文」和「日语」，可按需修改。以后也可以点击屏幕顶部菜单栏中的 Dejima 图标调整。
+
+引导会检查所选语言是否已就绪。如果系统已有可用模型（包括 Apple Intelligence 模型），无需另行下载。若需要模型，点「下载语言」，按系统提示完成下载。引导确认语言已就绪后，点「开始使用」关闭引导。
+
+<img src="docs/images/setup.png" alt="Dejima 的语言设置，英语界面" width="420">
+
+*语言设置，英语界面。*
+
+### 3. 选中，⌘C，⌘C
+
+在网页或文档中选中一段可复制的文字，按住 ⌘，快速按两下 C。译文出现在鼠标旁；点浮窗外或按 Esc，即可继续阅读。
+
+**如果提示语言模型还没下载**
+
+能正常显示译文，就跳过下载。新版系统可能直接使用已有的 Apple Intelligence 模型。若系统弹出下载提示，按提示操作；若 Dejima 提示某组语言的模型还没下载：
+
+1. 点 Dejima 菜单里的「翻译语言设置」，直接打开系统的「翻译语言…」（**Translation Languages…**）。若只打开了「语言与地区」（**Language & Region**），再点「翻译语言…」。打开设置不会自动下载。
+2. 在提示涉及的原文和译文语言旁分别点「下载」（**Download**）。例如英译简中，需要英语和简体中文两种语言。
+3. 等下载完成，回到原来的文字，再按一次 ⌘C、⌘C。
+
+<img src="docs/images/languages.jpg" alt="macOS 系统设置中的翻译语言下载列表，英语界面" width="420">
+
+*语言下载列表，英语界面。点所需语言右侧的 Download。*
+
+Dejima 的[翻译在本机完成](https://developer.apple.com/documentation/translation/translationsession)，无需勾选图中的 **On-Device Mode**。这项系统设置与 Dejima 的 Apple Intelligence 额外润色开关无关。
+
+## 用得顺手
+
+- **语言识别。** 短文本的原文语言可能识别不准。
+- **复制与固定。** 点复制按钮复制译文，点图钉可让浮窗在点击外部时保持打开。Esc 仍可关闭。
+- **额外润色。** 「用 Apple Intelligence 润色」会对初译再处理一次，默认关闭，仅在 macOS 26 或更新版本且模型可用时显示。该开关不决定初译模型，系统可能已用 Apple Intelligence 翻译。润色失败时保留初译。
+- **界面语言。** 跟随系统语言，支持简体中文、英语、日语和韩语，其他语言使用英语。
+
+参见[翻译工具对比](docs/Comparison.md)（英文）。
+
+<details>
+<summary>连按两次 ⌘C 后没有反应？</summary>
+
+确认文字可以正常复制、当前运行的 Dejima 已获辅助功能权限，且菜单中的监听没有暂停。若浮窗提示语言模型还没下载，按上方的下载步骤操作。
+
+</details>
 
 ## 隐私
 
@@ -27,16 +79,12 @@ macOS 菜单栏翻译工具。选中文字，连按两下 ⌘C，在鼠标旁查
 
 检查更新会访问 GitHub，不发送翻译内容、使用记录或应用生成的身份标识。自动检查默认关闭；开启后，若距上次成功检查已满 24 小时，会在启动时检查。失败后可能在下次启动时重试。
 
-## 构建
+## 关于这个名字
 
-需要 Xcode 26 或更新版本、macOS 26 或更新版本的 SDK，以及 XcodeGen。
+Dejima 得名于长崎的[出岛](https://nagasakidejima.jp/history/)。江户时代，这座人工岛是日本与西欧贸易、知识与文化交流的窗口。
 
-```bash
-brew install xcodegen
-xcodegen generate
-open Dejima.xcodeproj
-```
+## 开发
 
-选择 `Dejima` 或 `Dejima26` scheme，配置签名后运行。版本差异和打包步骤见[开发文档](docs/Development.md)（英文）。
+构建要求、两个版本的差异和打包步骤见[开发文档](docs/Development.md)（英文）。
 
 MIT 许可证，见 [LICENSE](LICENSE)。

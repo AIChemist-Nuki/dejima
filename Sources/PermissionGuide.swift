@@ -1,13 +1,14 @@
 import AppKit
 import SwiftUI
 
-/// Guides Accessibility setup using the running app bundle as the drag source.
+/// Guides Accessibility and translation language setup.
 /// A separate panel follows System Settings while its window is visible.
 @MainActor
 final class PermissionGuide: NSObject, NSWindowDelegate {
     private var panel: NSPanel?
     private var dock: NSPanel?
     private var watcher: Task<Void, Never>?
+    private var languageSetup: LanguageSetupModel?
     /// Keep the guide visible after Back, until Settings is opened from it again.
     private var dockDismissed = false
     private let onGranted: () -> Void
@@ -17,6 +18,15 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
     }
 
     func show() {
+        if AXIsProcessTrusted() {
+            showLanguages()
+            return
+        }
+        if languageSetup != nil {
+            close()
+            languageSetup = nil
+            panel = nil
+        }
         if panel == nil { panel = makePanel() }
         guard let panel else { return }
 
@@ -32,8 +42,29 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
 
     func close() {
         stopWatching()
+        languageSetup?.cancel()
         panel?.orderOut(nil)
         dock?.orderOut(nil)
+    }
+
+    private func showLanguages() {
+        stopWatching()
+        dock?.orderOut(nil)
+        languageSetup?.cancel()
+        if panel == nil { panel = makePanel() }
+        guard let panel else { return }
+        let model = LanguageSetupModel()
+        languageSetup = model
+        let host = NSHostingView(rootView: LanguageSetupView(model: model) { [weak self] in
+            self?.close()
+        })
+        host.frame.size = CGSize(width: Self.windowWidth, height: host.fittingSize.height)
+        panel.contentView = host
+        panel.setContentSize(host.frame.size)
+        panel.title = String(localized: "Translation languages")
+        if !panel.isVisible { panel.center() }
+        NSApp.activate()
+        panel.makeKeyAndOrderFront(nil)
     }
 
     private func openSettings() {
@@ -108,8 +139,12 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
                 guard let self, !Task.isCancelled else { return }
                 tick += 1
                 if tick % 8 == 0, AXIsProcessTrusted() {
-                    self.close()
                     self.onGranted()
+                    if LanguageSetupModel.isComplete {
+                        self.close()
+                    } else {
+                        self.showLanguages()
+                    }
                     return
                 }
                 self.followSettings()
@@ -164,6 +199,7 @@ final class PermissionGuide: NSObject, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         stopWatching()
+        languageSetup?.cancel()
         dock?.orderOut(nil)
     }
 }
@@ -329,7 +365,7 @@ private struct PermissionGuideView: View {
                 .foregroundStyle(.secondary)
             }
 
-            Text("This window closes by itself once the switch is on.")
+            Text("Once access is granted, choose your translation languages here.")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
