@@ -43,13 +43,15 @@ Select a passage you can copy in a webpage or document. Hold ⌘ and quickly pre
 
 If a translation appears, skip the downloads. If macOS prompts you to download languages, follow that prompt. If Dejima says a language pair has not been downloaded:
 
-1. Choose **Check language models…** in the Dejima menu to open **Language & Region** in System Settings. This button only opens settings; it does not download anything.
+1. Choose **Translation language settings…** in the Dejima menu to open **Language & Region** in System Settings. This button only opens settings; it does not download anything.
 2. Click **Translation Languages…**, then **Download** beside both the source and target languages named in the message. For English to Simplified Chinese, you need both English and Simplified Chinese.
 3. Wait for the downloads to finish, return to the original text, and press **⌘C twice** again.
 
 <img src="docs/images/languages.jpg" alt="Translation language downloads in macOS System Settings, in English" width="420">
 
 *Language downloads, shown in English. Click Download beside each required language.*
+
+Dejima [already translates on device](https://developer.apple.com/documentation/translation/translationsession), so you do not need to enable **On-Device Mode** in the screenshot. This system setting is separate from Dejima's extra Apple Intelligence refinement.
 
 ## Make it your own
 

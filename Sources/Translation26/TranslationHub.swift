@@ -71,7 +71,7 @@ enum TranslationHubError: LocalizedError {
             return String(localized: "Dejima couldn't tell what language this is. Pick a source language in the menu and copy again.")
         case .notInstalled(let source, let target):
             let pair = "\(LanguageRouter.displayName(source)) → \(LanguageRouter.displayName(target))"
-            return String(localized: "\(pair) isn't downloaded yet. Use “Check language models…” in the menu to install it, then copy again.")
+            return String(localized: "The languages for \(pair) aren't downloaded yet. Open “Translation language settings…” in the menu to download them, then try again.")
         }
     }
 }

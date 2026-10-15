@@ -43,13 +43,15 @@
 
 能正常显示译文，就跳过下载。若系统弹出下载提示，按提示操作；若 Dejima 提示某组语言的模型还没下载：
 
-1. 点 Dejima 菜单里的「查看语言模型…」，打开系统设置的「语言与地区」（**Language & Region**）。这个按钮只打开设置，不会自动下载。
+1. 点 Dejima 菜单里的「翻译语言设置…」，打开系统设置的「语言与地区」（**Language & Region**）。这个按钮只打开设置，不会自动下载。
 2. 点「翻译语言…」（**Translation Languages…**），在提示涉及的原文和译文语言旁分别点「下载」（**Download**）。例如英译简中，需要英语和简体中文两种语言。
 3. 等下载完成，回到原来的文字，再按一次 ⌘C、⌘C。
 
 <img src="docs/images/languages.jpg" alt="macOS 系统设置中的翻译语言下载列表，英语界面" width="420">
 
 *语言下载列表，英语界面。点所需语言右侧的 Download。*
+
+Dejima 的[翻译在本机完成](https://developer.apple.com/documentation/translation/translationsession)，无需勾选图中的 **On-Device Mode**。这项系统设置与 Dejima 的 Apple Intelligence 额外润色开关无关。
 
 ## 用得顺手
 

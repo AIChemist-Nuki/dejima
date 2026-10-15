@@ -73,7 +73,7 @@ struct MenuBarView: View {
         Divider()
 
         Button("Check for updates…") { Updater.checkNow() }
-        Button("Check language models…") { openTranslationSettings() }
+        Button("Translation language settings…") { openTranslationSettings() }
         Button("Quit Dejima") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }

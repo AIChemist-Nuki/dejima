@@ -43,7 +43,7 @@
 
 이미 번역이 된다면 이 과정은 건너뛰세요. 시스템의 다운로드 안내가 나타나면 그 안내를 따르면 됩니다.
 
-1. Dejima 메뉴에서 **언어 모델 확인…**을 눌러 시스템 설정의 **Language & Region**을 엽니다. 이 메뉴는 설정 화면만 열며 자동으로 내려받지는 않습니다.
+1. Dejima 메뉴에서 **번역 언어 설정…**을 눌러 시스템 설정의 **Language & Region**을 엽니다. 이 메뉴는 설정 화면만 열며 자동으로 내려받지는 않습니다.
 2. **Translation Languages…**를 클릭합니다.
 3. 오류 메시지에 표시된 원문과 번역문 언어의 **Download** 버튼을 눌러 **둘 다** 내려받습니다. 예를 들어 영어와 중국어 간체입니다.
 4. 다운로드가 끝나면 원래 글로 돌아가 ⌘C를 두 번 누릅니다.
@@ -51,6 +51,8 @@
 <img src="docs/images/languages.jpg" alt="macOS 시스템 설정의 번역 언어 다운로드 목록, 영어 인터페이스" width="420">
 
 *시스템의 번역 언어 다운로드 목록입니다. 영어 인터페이스로 표시됩니다.*
+
+Dejima는 [이미 기기에서 번역을 처리하므로](https://developer.apple.com/documentation/translation/translationsession), 스크린샷의 **On-Device Mode**를 켤 필요가 없습니다. 이 시스템 설정은 Dejima의 Apple Intelligence 추가 다듬기와 별개입니다.
 
 ## 편하게 사용하기
 
