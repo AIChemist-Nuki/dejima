@@ -20,20 +20,24 @@ Select text and press ⌘C twice to see the translation beside your pointer. Dej
 
 Open the downloaded DMG and choose the folder for your system: **macOS 15 to 25** or **macOS 26 or later**. Drag `Dejima.app` to Applications before launching it.
 
-Follow the app's guide to open the Accessibility list in System Settings. Drag Dejima into the list and enable access. The guide closes automatically when access is granted.
-
-<img src="docs/images/accessibility.jpg" alt="Dejima's Accessibility guide in English" width="420">
+Follow the app's guide to open the Accessibility list in System Settings. Drag Dejima into the list and enable access. After access is granted, the guide continues to language setup.
 
 ### 2. Choose your translation languages
 
-Click the Dejima icon in the menu bar at the top of your screen and set two options:
+Set two options in the guide:
 
 - **Translate into:** the language you usually want to read.
 - **Unless it already is, then:** the language to use when the source is already in the first language.
 
 For example, choose **Simplified Chinese** and **English**: English translates into Chinese, and Chinese into English. The source language is detected automatically; you do not need to set it.
 
-The defaults are Simplified Chinese and Japanese. Change them as needed.
+The defaults are Simplified Chinese and Japanese. Change them as needed. You can also change them later from the Dejima icon in the menu bar at the top of your screen.
+
+The guide checks whether your selected languages are ready. If suitable models are already available, including Apple Intelligence models, no extra download is needed. Otherwise, click **Download languages** and follow the system prompt. Once the guide confirms the languages are ready, click **Get started** to close it.
+
+<img src="docs/images/setup.png" alt="Dejima language setup, English interface" width="420">
+
+*Language setup, English interface.*
 
 ### 3. Select, ⌘C, ⌘C
 
@@ -43,8 +47,8 @@ Select a passage you can copy in a webpage or document. Hold ⌘ and quickly pre
 
 If a translation appears, skip the downloads. Newer systems may use Apple Intelligence models that are already available. If macOS prompts you to download languages, follow that prompt. If Dejima says a language pair has not been downloaded:
 
-1. Choose **Translation language settings…** in the Dejima menu to open **Language & Region** in System Settings. This button only opens settings; it does not download anything.
-2. Click **Translation Languages…**, then **Download** beside both the source and target languages named in the message. For English to Simplified Chinese, you need both English and Simplified Chinese.
+1. Choose **Translation language settings** in the Dejima menu to open **Translation Languages…** directly. If only **Language & Region** opens, click **Translation Languages…** there. Opening settings does not start a download.
+2. Click **Download** beside both the source and target languages named in the message. For English to Simplified Chinese, you need both English and Simplified Chinese.
 3. Wait for the downloads to finish, return to the original text, and press **⌘C twice** again.
 
 <img src="docs/images/languages.jpg" alt="Translation language downloads in macOS System Settings, in English" width="420">
@@ -57,7 +61,7 @@ Dejima [already translates on device](https://developer.apple.com/documentation/
 
 - **Language detection.** The source language may be misidentified for short text.
 - **Copy or pin.** Copy the translation with the copy button, or pin the panel to keep it open when clicking elsewhere. Esc still closes it.
-- **Extra refinement.** **Refine with Apple Intelligence** adds a separate pass after translation. It is off by default and appears only on macOS 26 or later with an available model. If refinement fails, the draft translation is kept.
+- **Extra refinement.** **Refine with Apple Intelligence** adds a separate pass after translation. It is off by default and appears only on macOS 26 or later with an available model. This switch does not choose the initial translation model; the system may already use Apple Intelligence. If refinement fails, the draft translation is kept.
 - **Interface language.** Follows your system language: English, Simplified Chinese, Japanese, or Korean. Other languages fall back to English.
 
 See the [translation app comparison](docs/Comparison.md).

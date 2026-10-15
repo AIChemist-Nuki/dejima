@@ -1,6 +1,314 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Check again" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "再確認"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "다시 확인"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "重新检查"
+          }
+        }
+      }
+    },
+    "Checking languages…" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "翻訳言語を確認中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "번역 언어 확인 중…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "正在检查翻译语言…"
+          }
+        }
+      }
+    },
+    "Choose your languages" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "翻訳言語を選ぶ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "번역 언어 선택"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "选择翻译语言"
+          }
+        }
+      }
+    },
+    "Dejima switches between these two languages automatically. Other source languages may need downloads later." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Dejima はこの 2 言語の翻訳方向を自動で切り替えます。原文が他の言語の場合は、追加のダウンロードが必要になることがあります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Dejima가 두 언어의 번역 방향을 자동으로 전환합니다. 다른 언어를 번역할 때는 추가 다운로드가 필요할 수 있습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Dejima 会自动切换这两种语言的翻译方向。翻译其他语言时，可能需要另外下载。"
+          }
+        }
+      }
+    },
+    "Download languages" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "言語をダウンロード"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "언어 다운로드"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "下载语言"
+          }
+        }
+      }
+    },
+    "Download these languages to translate on this Mac." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "これらの言語をダウンロードすると、この Mac で翻訳できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "이 언어를 다운로드하면 이 Mac에서 번역할 수 있습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "下载所需语言，即可在本机翻译。"
+          }
+        }
+      }
+    },
+    "Get started" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "使い始める"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "시작하기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "开始使用"
+          }
+        }
+      }
+    },
+    "Set up later" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "あとで設定"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "나중에 설정"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "稍后设置"
+          }
+        }
+      }
+    },
+    "The languages aren't ready. Try again or finish setting up later." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "翻訳言語の準備ができていません。再試行するか、あとで設定してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "번역 언어가 아직 준비되지 않았습니다. 다시 시도하거나 나중에 설정을 완료하세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "翻译语言尚未就绪。请重试，或稍后完成设置。"
+          }
+        }
+      }
+    },
+    "These languages are ready on this Mac." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "この Mac でこれらの言語を翻訳できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "이 Mac에서 이 언어로 번역할 수 있습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "本机已可使用这些语言。"
+          }
+        }
+      }
+    },
+    "This language pair isn't supported. Choose two different languages." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "この言語の組み合わせには対応していません。異なる 2 つの言語を選んでください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "지원하지 않는 언어 조합입니다. 서로 다른 두 언어를 선택하세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "该语言组合不受支持。请选择两种不同的语言。"
+          }
+        }
+      }
+    },
+    "Translation languages" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "翻訳言語"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "번역 언어"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "翻译语言"
+          }
+        }
+      }
+    },
+    "Try again" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "再試行"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "다시 시도"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "重试"
+          }
+        }
+      }
+    },
+    "Waiting for languages to be ready…" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "翻訳言語の準備を待っています…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "번역 언어가 준비될 때까지 기다리는 중…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "等待翻译语言就绪…"
+          }
+        }
+      }
+    },
     "%@ is the latest release." : {
       "comment" : "The second sentence of the alert above. The argument is the string “CFBundleShortVersionString” or the string “0”.",
       "isCommentAutoGenerated" : true,
@@ -25,26 +333,26 @@
         }
       }
     },
-    "The languages for %@ aren't downloaded yet. Open “Translation language settings…” in the menu to download them, then try again." : {
+    "The languages for %@ aren't downloaded yet. Open “Translation language settings” in the menu to download them, then try again." : {
       "comment" : "A description of an error that might occur when translating text. The argument is the string “%1$arg → %2$arg”.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "%@ に必要な翻訳言語がまだダウンロードされていません。メニューの「翻訳言語の設定…」からダウンロードして、もう一度お試しください。"
+            "value" : "%@ に必要な翻訳言語がまだダウンロードされていません。メニューの「翻訳言語の設定」からダウンロードして、もう一度お試しください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "%@에 필요한 번역 언어가 아직 다운로드되지 않았습니다. 메뉴의 ‘번역 언어 설정…’에서 다운로드한 후 다시 시도하세요."
+            "value" : "%@에 필요한 번역 언어가 아직 다운로드되지 않았습니다. 메뉴의 ‘번역 언어 설정’에서 다운로드한 후 다시 시도하세요."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "%@ 所需的翻译语言尚未下载。打开菜单中的“翻译语言设置…”，下载所需语言后重试。"
+            "value" : "%@ 所需的翻译语言尚未下载。打开菜单中的“翻译语言设置”，下载所需语言后重试。"
           }
         }
       }
@@ -193,26 +501,26 @@
         }
       }
     },
-    "Translation language settings…" : {
+    "Translation language settings" : {
       "comment" : "A button that opens Language & Region settings for translation language downloads.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "翻訳言語の設定…"
+            "value" : "翻訳言語の設定"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "번역 언어 설정…"
+            "value" : "번역 언어 설정"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "翻译语言设置…"
+            "value" : "翻译语言设置"
           }
         }
       }
@@ -877,24 +1185,24 @@
         }
       }
     },
-    "This window closes by itself once the switch is on." : {
+    "Once access is granted, choose your translation languages here." : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "スイッチを入れると、このウィンドウは自動的に閉じます。"
+            "value" : "権限を許可したら、ここで翻訳言語を選んでください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "스위치를 켜면 이 창은 자동으로 닫힙니다."
+            "value" : "권한을 허용한 후 여기에서 번역 언어를 선택하세요."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "开关打开后，这个窗口会自己关掉。"
+            "value" : "获得权限后，在此选择翻译语言。"
           }
         }
       }

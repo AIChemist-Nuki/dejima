@@ -36,6 +36,14 @@ The `Dejima26` target produces `Dejima26.app` to avoid overwriting the other tar
 
 Optional refinement uses Foundation Models when available on macOS 26 or later. Both targets include the same refinement code.
 
+## First-run language setup
+
+The permission guide continues to a shared language setup view after Accessibility is granted. Both targets use a visible `translationTask` session and `prepareTranslation()` to request any missing languages. The ordinary macOS 26 translation path still uses installed models directly.
+
+Setup checks both directions for the two selected languages using the same default strategy as translation. Existing Apple Intelligence models can satisfy that check without downloading traditional language packs. A successful `prepareTranslation()` return is not proof that downloads have finished, so setup rechecks availability before enabling **Get started**. Closing or postponing setup does not mark it complete. Other source languages may need downloads later.
+
+The menu opens the system's Translation Languages sheet using the link exposed by Apple's own download dialog. This was verified on macOS 27; if another system opens only Language & Region, the user can choose **Translation Languages…** there. First-run downloads use the public Translation API independently of this settings link.
+
 ## Verify Apple Intelligence use
 
 Dejima has two distinct model paths:
@@ -68,6 +76,7 @@ For timing and request inspection, use Apple's [Foundation Models instrument](ht
 - `Sources/TranslationLegacy/` and `Sources/Translation26/` contain the target-specific translation implementations.
 - `Sources/Polisher.swift` handles optional refinement and returns the draft on failure.
 - `Sources/PermissionGuide.swift`, `MenuBarView.swift`, `ResultPanel.swift`, and `ResultView.swift` provide the interface.
+- `Sources/LanguageSetup.swift` checks the selected languages and requests downloads during setup.
 - `Sources/Updater.swift` checks GitHub releases; `LoginItem.swift` manages launch at login.
 
 UI translations are stored in `Localizable.xcstrings` and `InfoPlist.xcstrings`. Keep these catalogs, `Assets.xcassets`, and `AppIcon.icon` included in both targets when changing `project.yml`. After regenerating the project, check the language list in Xcode before editing translations; the translated strings remain in the catalogs.

@@ -38,6 +38,7 @@ final class Controller: ObservableObject {
         refreshPermission()
         if hasAccessibility {
             enableMonitoring()
+            if !LanguageSetupModel.isComplete { showPermissionGuide() }
         } else {
             showPermissionGuide()
         }
@@ -56,6 +57,7 @@ final class Controller: ObservableObject {
         hasAccessibility = granted
         if granted {
             enableMonitoring()
+            if !LanguageSetupModel.isComplete { showPermissionGuide() }
         } else {
             showPermissionGuide()
         }

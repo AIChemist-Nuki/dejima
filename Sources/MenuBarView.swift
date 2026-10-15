@@ -3,8 +3,8 @@ import SwiftUI
 
 struct MenuBarView: View {
     @ObservedObject var controller: Controller
-    @State private var primary = LanguageRouter.primary
-    @State private var secondary = LanguageRouter.secondary
+    @AppStorage("primaryLanguage") private var primary = "zh-Hans"
+    @AppStorage("secondaryLanguage") private var secondary = "ja"
     @AppStorage("polishWithAppleIntelligence") private var polish = false
     /// Read system status because login registration can change outside the app.
     @State private var launchAtLogin = LoginItem.isEnabled
@@ -40,14 +40,12 @@ struct MenuBarView: View {
                 Text(LanguageRouter.displayName(code)).tag(code)
             }
         }
-        .onChange(of: primary) { _, new in LanguageRouter.primary = new }
 
         Picker("Unless it already is, then", selection: $secondary) {
             ForEach(LanguageRouter.choices, id: \.self) { code in
                 Text(LanguageRouter.displayName(code)).tag(code)
             }
         }
-        .onChange(of: secondary) { _, new in LanguageRouter.secondary = new }
 
         if Polisher.isAvailable {
             Toggle("Refine with Apple Intelligence", isOn: $polish)
@@ -73,7 +71,7 @@ struct MenuBarView: View {
         Divider()
 
         Button("Check for updates") { Updater.checkNow() }
-        Button("Translation language settings…") { openTranslationSettings() }
+        Button("Translation language settings") { openTranslationSettings() }
         Button("Quit Dejima") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }
@@ -94,7 +92,7 @@ struct MenuBarView: View {
 
     /// Language models are managed system-wide in Language & Region settings.
     private func openTranslationSettings() {
-        let url = URL(string: "x-apple.systempreferences:com.apple.Localization-Settings.extension")!
+        let url = URL(string: "x-apple.systempreferences:com.apple.Localization-Settings.extension?translation")!
         NSWorkspace.shared.open(url)
     }
 }
