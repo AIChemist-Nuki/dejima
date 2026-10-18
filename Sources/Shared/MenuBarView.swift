@@ -8,7 +8,7 @@ struct MenuBarView: View {
     @AppStorage("polishWithAppleIntelligence") private var polish = false
     /// Read system status because login registration can change outside the app.
     @State private var launchAtLogin = LoginItem.isEnabled
-    @State private var autoUpdate = Updater.checksAutomatically
+    @ObservedObject private var updater = Updater.shared
 
     var body: some View {
         if !controller.hasAccessibility {
@@ -65,12 +65,23 @@ struct MenuBarView: View {
             Button("Approve in Login Items…") { LoginItem.openSettings() }
         }
 
-        Toggle("Check for updates automatically", isOn: $autoUpdate)
-            .onChange(of: autoUpdate) { _, on in Updater.checksAutomatically = on }
+        Toggle("Check for updates automatically", isOn: Binding(
+            get: { updater.checksAutomatically },
+            set: { updater.setChecksAutomatically($0) }
+        ))
 
         Divider()
 
-        Button("Check for updates") { Updater.checkNow() }
+        Button {
+            updater.checkNow()
+        } label: {
+            if updater.updateAvailable {
+                Text("Update available")
+            } else {
+                Text("Check for updates")
+            }
+        }
+        .disabled(!updater.canCheckForUpdates)
         Button("Translation language settings") { openTranslationSettings() }
         Button("Quit Dejima") { NSApp.terminate(nil) }
             .keyboardShortcut("q")

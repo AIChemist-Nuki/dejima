@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		09285642844843A79C0F1701 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = A415B8579DAA4308927D1100 /* ThirdPartyNotices.txt */; };
+		09285642844843A79C0F1702 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = A415B8579DAA4308927D1100 /* ThirdPartyNotices.txt */; };
+		7B5F04013EED478ABC83F901 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BC734AAA31AB4E4AA0F03A01 /* Sparkle */; };
+		7B5F04013EED478ABC83F902 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BC734AAA31AB4E4AA0F03A02 /* Sparkle */; };
 		122ADCC96739872A46FABC4C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B08E74E629983C1F1AD319AF /* Assets.xcassets */; };
 		1F0EE4DBC0D6D62EBA00ADDD /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = D88590C10C2E521B7AD996E5 /* AppIcon.icon */; };
 		2966ADAD8A9B44F36A2EC639 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C4331311CC03F48024D55204 /* InfoPlist.xcstrings */; };
@@ -18,6 +22,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A415B8579DAA4308927D1100 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
 		3D279A6343494934A2539A1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7E23B9AD73974BA3AB34D118 /* Dejima.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dejima.entitlements; sourceTree = "<group>"; };
 		0B0A99D654C0B99D9DB945BB /* Dejima.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dejima.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -52,6 +57,11 @@
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		CFA41D2F3938474FA4A02C01 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (7B5F04013EED478ABC83F901 /* Sparkle in Frameworks */, ); runOnlyForDeploymentPostprocessing = 0; };
+		CFA41D2F3938474FA4A02C02 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (7B5F04013EED478ABC83F902 /* Sparkle in Frameworks */, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
 		534242EC796B1AB36248C4FF /* Sources */ = {
 			isa = PBXGroup;
@@ -71,6 +81,7 @@
 				B08E74E629983C1F1AD319AF /* Assets.xcassets */,
 				C4331311CC03F48024D55204 /* InfoPlist.xcstrings */,
 				C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */,
+				A415B8579DAA4308927D1100 /* ThirdPartyNotices.txt */,
 				3D279A6343494934A2539A1A /* Info.plist */,
 				7E23B9AD73974BA3AB34D118 /* Dejima.entitlements */,
 				675F5FECA2FD13B15F926B87 /* Products */,
@@ -93,6 +104,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 107D5660D03B6527B46B6416 /* Build configuration list for PBXNativeTarget "Dejima" */;
 			buildPhases = (
+				CFA41D2F3938474FA4A02C01 /* Frameworks */,
 				D20CE2F3FF4E9886FEC013B1 /* Sources */,
 				3D6D2B29DB8AFD2C09FD0F67 /* Resources */,
 			);
@@ -106,6 +118,7 @@
 			);
 			name = Dejima;
 			packageProductDependencies = (
+				BC734AAA31AB4E4AA0F03A01 /* Sparkle */,
 			);
 			productName = Dejima;
 			productReference = 0B0A99D654C0B99D9DB945BB /* Dejima.app */;
@@ -115,6 +128,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F916AC790CCAA7D974B7AF73 /* Build configuration list for PBXNativeTarget "Dejima26" */;
 			buildPhases = (
+				CFA41D2F3938474FA4A02C02 /* Frameworks */,
 				9123D8ED6B0C161213BD968E /* Sources */,
 				9C9C52B2B64080AB9C765F4E /* Resources */,
 			);
@@ -128,6 +142,7 @@
 			);
 			name = Dejima26;
 			packageProductDependencies = (
+				BC734AAA31AB4E4AA0F03A02 /* Sparkle */,
 			);
 			productName = Dejima26;
 			productReference = 6B80123CC84D4D7515E3C005 /* Dejima26.app */;
@@ -165,6 +180,7 @@
 			mainGroup = 2208951A8FAB67470FCA8B4B;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
+			packageReferences = (7B02543CF2974CB4B150502D /* XCRemoteSwiftPackageReference "Sparkle" */, );
 			productRefGroup = 675F5FECA2FD13B15F926B87 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -184,6 +200,7 @@
 				F0158B759C60A9D4685B33DB /* Assets.xcassets in Resources */,
 				2966ADAD8A9B44F36A2EC639 /* InfoPlist.xcstrings in Resources */,
 				CA3EEE913BA39B125421729F /* Localizable.xcstrings in Resources */,
+				09285642844843A79C0F1701 /* ThirdPartyNotices.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -195,6 +212,7 @@
 				122ADCC96739872A46FABC4C /* Assets.xcassets in Resources */,
 				BC81F9F2ED2B74D5AC77050D /* InfoPlist.xcstrings in Resources */,
 				79CBC0F4A3EA1CBA6B65B71B /* Localizable.xcstrings in Resources */,
+				09285642844843A79C0F1702 /* ThirdPartyNotices.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,6 +234,15 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7B02543CF2974CB4B150502D /* XCRemoteSwiftPackageReference "Sparkle" */ = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/sparkle-project/Sparkle"; requirement = {kind = exactVersion; version = 2.10.0; }; };
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BC734AAA31AB4E4AA0F03A01 /* Sparkle */ = {isa = XCSwiftPackageProductDependency; package = 7B02543CF2974CB4B150502D /* XCRemoteSwiftPackageReference "Sparkle" */; productName = Sparkle; };
+		BC734AAA31AB4E4AA0F03A02 /* Sparkle */ = {isa = XCSwiftPackageProductDependency; package = 7B02543CF2974CB4B150502D /* XCRemoteSwiftPackageReference "Sparkle" */; productName = Sparkle; };
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3D211F23B59F2604CE752320 /* Debug */ = {

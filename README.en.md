@@ -73,11 +73,17 @@ Check that the text can be copied, that the running copy of Dejima has Accessibi
 
 </details>
 
+## Updates
+
+Choose **Check for updates** or **Update available** in the menu and follow the prompts to download. After you confirm installation, Dejima quits, replaces the app, and relaunches.
+
+**Check for updates automatically** is off by default. Enable it for daily background checks; your existing preference is preserved. Older versions need one manual installation of a release that supports in-app updates. Later updates can be installed from the app.
+
 ## Privacy
 
 Translation and refinement run on device. Language model downloads need internet access.
 
-Update checks contact GitHub without sending translated text, usage reports, or an app-generated identifier. Automatic checks are off by default. When enabled, they run at launch if 24 hours have passed since the last successful check; failures may be retried on the next launch.
+Update checks and downloads contact GitHub and its download services without sending translated text. Installing an update requires your confirmation.
 
 ## About the name
 

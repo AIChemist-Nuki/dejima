@@ -4,6 +4,8 @@
 
 Install Xcode 26 or later with the macOS 26 SDK or later. The SDK requirement is separate from the app's minimum macOS version.
 
+Xcode resolves Sparkle 2.10.0 through Swift Package Manager. Keep the committed `Package.resolved` file when building or releasing.
+
 Command-line builds require the full Xcode installation selected with `xcode-select` or a per-command `DEVELOPER_DIR` override.
 
 Open the checked-in project from the repository root:
@@ -20,6 +22,8 @@ Choose a scheme and run it in Xcode, or build from the command line after config
 xcodebuild -project Dejima.xcodeproj -scheme Dejima -configuration Release -destination 'generic/platform=macOS' build
 xcodebuild -project Dejima.xcodeproj -scheme Dejima26 -configuration Release -destination 'generic/platform=macOS' build
 ```
+
+Run `./Scripts/test-release-preflight.sh` to check that invalid release settings stop before tagging or building. The tests use temporary fixtures and stub commands; they do not access signing credentials or notarization services.
 
 ## Translation targets
 
@@ -79,7 +83,7 @@ The project's `Sources` group contains three file system synchronized folders. `
 - `Sources/Shared/Polisher.swift` handles optional refinement and returns the draft on failure.
 - `Sources/Shared/PermissionGuide.swift`, `MenuBarView.swift`, `ResultPanel.swift`, and `ResultView.swift` provide the interface.
 - `Sources/Shared/LanguageSetup.swift` checks the selected languages and requests downloads during setup.
-- `Sources/Shared/Updater.swift` checks GitHub releases; `LoginItem.swift` manages launch at login.
+- `Sources/Shared/Updater.swift` manages Sparkle updates; `LoginItem.swift` manages launch at login.
 
 UI translations are stored in `Localizable.xcstrings` and `InfoPlist.xcstrings`. These catalogs, `Assets.xcassets`, and `AppIcon.icon` are shared resources at the repository root. Keep them included in both targets and update the project's language list in Xcode when adding localizations.
 
@@ -89,6 +93,16 @@ Edit `AppIcon.icon` in Icon Composer. Xcode uses it for both targets and generat
 
 Run `./Scripts/app-icon.sh` with Xcode 27 selected to refresh the PNGs in `Assets.xcassets/AppIcon.appiconset`. These exports include the traditional macOS inset; packaging uses `icon_512.png` for DMG artwork and the volume icon.
 
+## In-app updates
+
+Sparkle 2.10.0 handles downloading, installing, and relaunching the app. **Check for updates** opens its standard update flow; the menu shows **Update available** when an update is waiting. Installation requires user confirmation, with silent automatic installation disabled.
+
+Automatic checks are off by default. The existing `checkForUpdatesAutomatically` preference is migrated, and enabled checks run daily in the background. System profiling is disabled. Checks and downloads contact the GitHub update feeds and release download services without sending translated text.
+
+The running macOS version selects `appcast-macos15.xml` on macOS 15–25 or `appcast-macos26.xml` on macOS 26 and later. Each feed points to a ZIP containing the corresponding single `Dejima.app`. The combined DMG remains the first-install and manual-install download. Users of older versions must install the first Sparkle-enabled release manually once.
+
+The public update key is stored in `SUPublicEDKey` in `Info.plist`. Keep the matching private key in the login Keychain under account `com.nuki.Dejima`, or select its account with `SPARKLE_KEY_ACCOUNT` when packaging. Never commit the private key. Signed feeds and archives are required and verified before release artifacts are placed in `dist`.
+
 ## Local packaging
 
 To test packaging with uncommitted changes:
@@ -97,13 +111,13 @@ To test packaging with uncommitted changes:
 ./Scripts/release.sh --local 0.3.0
 ```
 
-This builds both targets with ad-hoc signing in `build/local` and creates `dist/Dejima-0.3.0-local.dmg`. It does not create tags, notarize, or update provisioning assets. The package is for local testing and is not suitable for public distribution.
+This builds both targets with ad-hoc signing in `build/local` and creates a `-local.dmg` plus two `-local.zip` archives in `dist`. It does not create tags, notarize, update provisioning assets, or generate update feeds. These packages are for local testing and must not be published as production updates.
 
 ## Package a release
 
-Public release packaging requires a clean working tree. It builds both targets from the checked-in Xcode project, verifies their signatures, and creates `dist/Dejima-<version>.dmg`. It replaces the contents of `build/release`.
+Public release packaging requires a clean working tree, a valid Developer ID Application identity with its private key, a `NOTARY_PROFILE`, and the matching Sparkle signing key in Keychain. Missing or invalid credentials stop the script before it creates a tag. Public packaging does not fall back to development signing.
 
-For public distribution, configure a Developer ID Application signing identity and notarization credentials. Store a Keychain profile using the interactive prompt:
+Store notarization credentials in a Keychain profile using the interactive prompt:
 
 ```bash
 xcrun notarytool store-credentials dejima
@@ -117,11 +131,21 @@ NOTARY_PROFILE=dejima \
 ./Scripts/release.sh 0.3.0
 ```
 
-Replace the identity and version with your own. The version argument creates a local `vX.Y.Z` tag on HEAD before building. If HEAD is already tagged, omit the argument, including when retrying a failed build. The script does not push tags or publish a GitHub release.
+Replace the identity and version with your own. If exactly one valid Developer ID Application identity is installed, `CODE_SIGN_IDENTITY` can be omitted. The version argument creates a local `vX.Y.Z` tag on HEAD after preflight checks and before building. If HEAD is already tagged, omit the argument, including when retrying a failed build. The script does not push tags or publish a GitHub release.
 
-Release versions come from the tag; build numbers come from the Git commit count. The script passes both to Xcode, overriding `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in the project settings for that build. The project settings supply the versions for ordinary development builds. The updater compares the published release tag with the running app's bundle version.
+Release versions come from the tag. The script sets both `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` to that version, so `CFBundleShortVersionString` and `CFBundleVersion` match. Sparkle compares `CFBundleVersion` to determine update order; use an increasing version for each release. The project settings supply the versions for ordinary development builds.
 
-Without `CODE_SIGN_IDENTITY`, the script uses the project's signing configuration. Without `NOTARY_PROFILE`, it skips notarization. A development-signed or unnotarized package may be blocked by Gatekeeper when downloaded on another Mac.
+The script replaces `build/release`, archives and exports both targets, verifies Developer ID signatures, notarizes the DMG and staples the tickets, then signs and verifies the update feeds and archives. Successful packaging produces five files in `dist`:
+
+| File | Purpose |
+| --- | --- |
+| `Dejima-<version>.dmg` | Both variants for first or manual installation |
+| `Dejima-<version>-macos15.zip` | App update for macOS 15–25 |
+| `Dejima-<version>-macos26.zip` | App update for macOS 26 and later |
+| `appcast-macos15.xml` | Signed update feed for macOS 15–25 |
+| `appcast-macos26.xml` | Signed update feed for macOS 26 and later |
+
+Push the tag and upload all five files to the same GitHub release as a separate publishing step. The app reads the latest release's feeds, whose archive links point to the matching versioned release downloads. Upload the complete set before publishing the release.
 
 The DMG contains one folder per minimum macOS version, each with `Dejima.app` and an Applications shortcut. Folder names and installation instructions are localized in English, Simplified Chinese, Japanese, and Korean.
 
