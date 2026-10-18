@@ -25,7 +25,7 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>SUFeedURL</key>
-	<string>https://github.com/AIChemist-Nuki/dejima/releases/latest/download/appcast-macos15.xml</string>
+	<string>https://github.com/AIChemist-Nuki/dejima/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>Kl5S9ZZkoTMqOmQsTtbZ7P9/a2fmjgKuFzAnSV3VuYM=</string>
 	<key>SUEnableAutomaticChecks</key>

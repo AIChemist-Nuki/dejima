@@ -18,7 +18,7 @@ Select text and press ⌘C twice to see the translation beside your pointer. Dej
 
 ### 1. Install and allow access
 
-Open the downloaded DMG and choose the folder for your system: **macOS 15 to 25** or **macOS 26 or later**. Drag `Dejima.app` to Applications before launching it.
+Open the downloaded DMG and drag `Dejima.app` to Applications before launching it.
 
 Follow the app's guide to open the Accessibility list in System Settings. Drag Dejima into the list and enable access. After access is granted, the guide continues to language setup.
 
@@ -91,6 +91,6 @@ Dejima is named after the [artificial island in Nagasaki](https://nagasakidejima
 
 ## Development
 
-Open `Dejima.xcodeproj` in Xcode and configure signing. See [Development](docs/Development.md) for build requirements, differences between the two versions, and release packaging.
+Open `Dejima.xcodeproj` in Xcode and configure signing. See [Development](docs/Development.md) for build requirements, translation implementations on different macOS versions, and release packaging.
 
 MIT licensed. See [LICENSE](LICENSE).

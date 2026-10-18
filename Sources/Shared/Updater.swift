@@ -44,16 +44,6 @@ final class Updater: NSObject, ObservableObject, SPUUpdaterDelegate, @preconcurr
         updaterController.checkForUpdates(nil)
     }
 
-    func feedURLString(for updater: SPUUpdater) -> String? {
-        let variant: String
-        if #available(macOS 26, *) {
-            variant = "macos26"
-        } else {
-            variant = "macos15"
-        }
-        return "https://github.com/AIChemist-Nuki/dejima/releases/latest/download/appcast-\(variant).xml"
-    }
-
     var supportsGentleScheduledUpdateReminders: Bool { true }
 
     func standardUserDriverShouldHandleShowingScheduledUpdate(
