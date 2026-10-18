@@ -18,7 +18,7 @@
 
 ### 1. 설치하고 권한 허용하기
 
-내려받은 DMG를 열고 시스템에 맞는 **macOS 15~25** 또는 **macOS 26 이상** 폴더를 선택합니다. `Dejima.app`을 응용 프로그램 폴더로 드래그한 뒤 실행하세요.
+내려받은 DMG를 열고 `Dejima.app`을 응용 프로그램 폴더로 드래그한 뒤 실행하세요.
 
 앱의 안내에 따라 시스템 설정의 손쉬운 사용 목록을 엽니다. Dejima를 목록에 드래그하고 권한을 켜세요. 권한을 허용하면 언어 선택 단계로 이어집니다.
 
@@ -91,6 +91,6 @@ Dejima는 나가사키의 인공 섬 [데지마(出島)](https://nagasakidejima.
 
 ## 개발
 
-Xcode에서 `Dejima.xcodeproj`를 열고 서명을 설정하세요. 빌드 요구 사항, 두 버전의 차이, 릴리스 패키징 방법은 [개발 문서](docs/Development.md)(영어)를 참고하세요.
+Xcode에서 `Dejima.xcodeproj`를 열고 서명을 설정하세요. 빌드 요구 사항, macOS 버전별 번역 구현, 릴리스 패키징 방법은 [개발 문서](docs/Development.md)(영어)를 참고하세요.
 
 MIT 라이선스입니다. [LICENSE](LICENSE)를 참고하세요.

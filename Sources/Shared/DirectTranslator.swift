@@ -5,12 +5,12 @@ import Translation
 /// Creates translation sessions directly on macOS 26 and later.
 /// Requires an identified source language and installed language models;
 /// this API cannot prompt for model downloads.
+@available(macOS 26, *)
 @MainActor
-final class TranslationHub {
-    /// Retained for the shared interface; direct sessions need no host window.
+final class DirectTranslator: Translator {
+    /// Direct sessions need no host window.
     func start() {}
 
-    /// - Parameter onPartial: Receives the accumulated translation after each chunk.
     func translate(_ text: String,
                    from source: Locale.Language?,
                    to target: Locale.Language,
@@ -27,7 +27,7 @@ final class TranslationHub {
 
         let session = TranslationSession(installedSource: from, target: target)
         var parts: [String] = []
-        for chunk in Self.chunk(text) {
+        for chunk in TranslationHub.chunk(text) {
             try Task.checkCancellation()
             let response = try await session.translate(chunk)
             parts.append(response.targetText)
@@ -42,22 +42,6 @@ final class TranslationHub {
         let recognizer = NLLanguageRecognizer()
         recognizer.processString(text)
         return recognizer.dominantLanguage.map { Locale.Language(identifier: $0.rawValue) }
-    }
-
-    /// Translate paragraphs separately so results can appear incrementally.
-    /// Split paragraphs longer than the request limit.
-    static func chunk(_ text: String, limit: Int = 1200) -> [String] {
-        var chunks: [String] = []
-        for paragraph in text.components(separatedBy: "\n") {
-            var rest = Substring(paragraph.trimmingCharacters(in: .whitespaces))
-            while rest.count > limit {
-                let cut = rest.index(rest.startIndex, offsetBy: limit)
-                chunks.append(String(rest[..<cut]))
-                rest = rest[cut...]
-            }
-            if !rest.isEmpty { chunks.append(String(rest)) }
-        }
-        return chunks
     }
 }
 

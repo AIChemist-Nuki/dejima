@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Builds both targets, a combined DMG, and signed Sparkle update archives.
+# Builds the app, a DMG, and a signed Sparkle update archive.
 #
 #   ./Scripts/release.sh 0.3.0    tag HEAD as v0.3.0, then build it
 #   ./Scripts/release.sh          build the version HEAD is already tagged with
@@ -11,8 +11,7 @@
 #
 #   git push origin main v0.3.0
 #
-# Each macOS build is packaged as Dejima.app in its own folder.
-# Scripts/dmg-window.swift generates the backgrounds and Finder layouts.
+# Scripts/dmg-window.swift generates the DMG background and Finder layout.
 #
 # Public distribution requires Developer ID signing, notarization, and an
 # existing Sparkle signing key in the login Keychain:
@@ -120,11 +119,6 @@ if [ "$LOCAL_BUILD" -eq 0 ]; then
     xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" --output-format json >/dev/null
 fi
 
-# The layout uses these names to position icons. Finder displays localized
-# names from the .localized directories created below.
-FOLDER_NEW="macOS 26+.localized"
-FOLDER_OLD="macOS 15-25.localized"
-
 ICON="$PWD/Assets.xcassets/AppIcon.appiconset/icon_512.png"
 
 # Show command output only on failure.
@@ -183,102 +177,74 @@ if [ "$LOCAL_BUILD" -eq 0 ]; then
 EOF
 fi
 
-# $1 scheme, $2 built product name, $3 folder inside the DMG
-build_one() {
-    local scheme="$1" product="$2" folder="$3"
-    echo "==> Building $scheme"
+echo "==> Building Dejima"
+args=(
+    -project Dejima.xcodeproj
+    -scheme Dejima
+    -configuration Release
+    -destination 'generic/platform=macOS'
+    -derivedDataPath "$BUILD/dd"
+    -clonedSourcePackagesDirPath "$SOURCE_PACKAGES"
+    -disableAutomaticPackageResolution
+    ONLY_ACTIVE_ARCH=NO
+    "MARKETING_VERSION=$VERSION"
+    "CURRENT_PROJECT_VERSION=$VERSION"
+)
+if [ "$LOCAL_BUILD" -eq 1 ]; then
+    args+=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=
+        OTHER_CODE_SIGN_FLAGS=--timestamp=none CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO
+        ENABLE_HARDENED_RUNTIME=NO)
+    action=build
+else
+    args+=(CODE_SIGN_STYLE=Manual "CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY"
+        "DEVELOPMENT_TEAM=$SIGNING_TEAM" OTHER_CODE_SIGN_FLAGS=--timestamp
+        CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO ENABLE_HARDENED_RUNTIME=YES
+        -archivePath "$BUILD/Dejima.xcarchive")
+    action=archive
+fi
+xcodebuild "${args[@]}" "$action" >"$BUILD/build.log" 2>&1 || {
+    echo "error: Dejima failed to build. Tail of $BUILD/build.log:" >&2
+    tail -30 "$BUILD/build.log" >&2
+    exit 1
+}
 
-    local args=(
-        -project Dejima.xcodeproj
-        -scheme "$scheme"
-        -configuration Release
-        -destination 'generic/platform=macOS'
-        -derivedDataPath "$BUILD/dd-$scheme"
-        -clonedSourcePackagesDirPath "$SOURCE_PACKAGES"
-        -disableAutomaticPackageResolution
-        ONLY_ACTIVE_ARCH=NO
-        "MARKETING_VERSION=$VERSION"
-        "CURRENT_PROJECT_VERSION=$VERSION"
-    )
-    if [ "$LOCAL_BUILD" -eq 1 ]; then
-        args+=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=
-            OTHER_CODE_SIGN_FLAGS=--timestamp=none CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO
-            ENABLE_HARDENED_RUNTIME=NO)
-    else
-        args+=(CODE_SIGN_STYLE=Manual "CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY"
-            "DEVELOPMENT_TEAM=$SIGNING_TEAM" OTHER_CODE_SIGN_FLAGS=--timestamp
-            CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO ENABLE_HARDENED_RUNTIME=YES
-            -archivePath "$BUILD/$scheme.xcarchive")
-    fi
-    local action=archive
-    [ "$LOCAL_BUILD" -eq 0 ] || action=build
-    xcodebuild "${args[@]}" "$action" >"$BUILD/$scheme.log" 2>&1 || {
-        echo "error: $scheme failed to build. Tail of $BUILD/$scheme.log:" >&2
-        tail -30 "$BUILD/$scheme.log" >&2
-        exit 1
+BUILT_APP="$BUILD/dd/Build/Products/Release/Dejima.app"
+if [ "$LOCAL_BUILD" -eq 0 ]; then
+    quiet xcodebuild -exportArchive -archivePath "$BUILD/Dejima.xcarchive" \
+        -exportPath "$BUILD/export" -exportOptionsPlist "$BUILD/ExportOptions.plist"
+    BUILT_APP="$BUILD/export/Dejima.app"
+fi
+[ -d "$BUILT_APP" ] || { echo "error: $BUILT_APP missing after a successful build" >&2; exit 1; }
+
+APP="$STAGE/Dejima.app"
+cp -R "$BUILT_APP" "$APP"
+ln -s /Applications "$STAGE/Applications"
+
+codesign --verify --strict --deep "$APP"
+if [ "$LOCAL_BUILD" -eq 1 ]; then
+    echo "    signature: ad-hoc (local verification)"
+else
+    signing_details=$(codesign -dvv "$APP" 2>&1)
+    printf '%s\n' "$signing_details" | grep -Fqx "Authority=$SIGNING_NAME" || {
+        echo "error: Dejima was not signed with the selected Developer ID identity" >&2; exit 1
     }
+    printf '%s\n' "$signing_details" | grep -q 'flags=.*runtime' || {
+        echo "error: Dejima is missing hardened runtime" >&2; exit 1
+    }
+    echo "    signed by: $SIGNING_NAME"
+fi
+echo "    version:   $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist") ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Contents/Info.plist"))"
+echo "    minimum:   $(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$APP/Contents/Info.plist")"
 
-    local app="$BUILD/dd-$scheme/Build/Products/Release/$product.app"
-    if [ "$LOCAL_BUILD" -eq 0 ]; then
-        quiet xcodebuild -exportArchive -archivePath "$BUILD/$scheme.xcarchive" \
-            -exportPath "$BUILD/export-$scheme" -exportOptionsPlist "$BUILD/ExportOptions.plist"
-        app="$BUILD/export-$scheme/$product.app"
-    fi
-    [ -d "$app" ] || { echo "error: $app missing after a successful build" >&2; exit 1; }
-
-    mkdir -p "$STAGE/$folder"
-    cp -R "$app" "$STAGE/$folder/Dejima.app"
-    ln -s /Applications "$STAGE/$folder/Applications"
-
-    codesign --verify --strict --deep "$STAGE/$folder/Dejima.app"
-    if [ "$LOCAL_BUILD" -eq 1 ]; then
-        echo "    signature: ad-hoc (local verification)"
-    else
-        local signing_details
-        signing_details=$(codesign -dvv "$STAGE/$folder/Dejima.app" 2>&1)
-        printf '%s\n' "$signing_details" | grep -Fqx "Authority=$SIGNING_NAME" || {
-            echo "error: $scheme was not signed with the selected Developer ID identity" >&2; exit 1
-        }
-        printf '%s\n' "$signing_details" | grep -q 'flags=.*runtime' || {
-            echo "error: $scheme is missing hardened runtime" >&2; exit 1
-        }
-        echo "    signed by: $SIGNING_NAME"
-    fi
-    echo "    version:   $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$STAGE/$folder/Dejima.app/Contents/Info.plist") ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$STAGE/$folder/Dejima.app/Contents/Info.plist"))"
-    echo "    minimum:   $(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$STAGE/$folder/Dejima.app/Contents/Info.plist")"
-}
-
-build_one Dejima   Dejima   "$FOLDER_OLD"
-build_one Dejima26 Dejima26 "$FOLDER_NEW"
-
-# $1 folder, followed by language/name pairs for Finder's .localized lookup.
-localize_folder() {
-    local folder="$1"; shift
-    local key="${folder%.localized}"
-    mkdir -p "$STAGE/$folder/.localized"
-    while [ $# -gt 0 ]; do
-        printf '"%s" = "%s";\n' "$key" "$2" >"$STAGE/$folder/.localized/$1.strings"
-        shift 2
-    done
-}
-localize_folder "$FOLDER_NEW" en "macOS 26 or later" zh-Hans "macOS 26 或更新" \
-    ja "macOS 26 以降" ko "macOS 26 이상"
-localize_folder "$FOLDER_OLD" en "macOS 15 to 25" zh-Hans "macOS 15 到 25" \
-    ja "macOS 15〜25" ko "macOS 15~25"
-
-echo "==> Drawing the window backgrounds"
+echo "==> Drawing the window background"
 mkdir -p "$STAGE/.background"
 swift_tool Scripts/dmg-window.swift art "$STAGE/.background" "$VERSION" "$ICON"
 # Combine 1x and 2x backgrounds into a single HiDPI TIFF for Finder.
-for art in root folder; do
-    quiet tiffutil -cathidpicheck \
-        "$STAGE/.background/$art.png" "$STAGE/.background/$art@2x.png" \
-        -out "$STAGE/.background/$art.tiff"
-    rm -f "$STAGE/.background/$art.png" "$STAGE/.background/$art@2x.png"
-done
+quiet tiffutil -cathidpicheck \
+    "$STAGE/.background/background.png" "$STAGE/.background/background@2x.png" \
+    -out "$STAGE/.background/background.tiff"
+rm -f "$STAGE/.background/background.png" "$STAGE/.background/background@2x.png"
 
-# Encode the Apple logo (U+F8FF) explicitly to preserve it in source editors.
-APPLE_LOGO=$(printf '\xef\xa3\xbf')
 cat > "$STAGE/Read Me.txt" <<EOF
 Dejima $VERSION
 https://github.com/AIChemist-Nuki/dejima
@@ -288,14 +254,8 @@ https://github.com/AIChemist-Nuki/dejima
 中文
 ========================================
 
-两个版本，装一个就行
-
-    macOS 26 或更新
-    macOS 15 到 25
-
-不知道自己是哪个版本：点屏幕左上角的 ${APPLE_LOGO} → 关于本机。
-
-打开对应的文件夹，把 Dejima.app 拖到旁边的 Applications 上。
+安装
+把 Dejima.app 拖到旁边的 Applications 上。需要 macOS 15 或更新版本。
 
 首次使用
 1. 从“应用程序”打开 Dejima，按引导授予辅助功能权限。
@@ -305,7 +265,6 @@ https://github.com/AIChemist-Nuki/dejima
 3. 在支持复制文字的应用中选中文字，快速连按两次 ⌘C，查看译文。
 
 遇到问题
-· 打开时提示需要更新的 macOS：改装「macOS 15 到 25」文件夹里的版本。
 · 连按两下 ⌘C 没反应：菜单栏图标 → 授予辅助功能权限…
 · 提示缺少翻译语言：菜单栏图标 → 翻译语言设置，查看或下载所需语言。
 
@@ -321,15 +280,8 @@ https://github.com/AIChemist-Nuki/dejima
 English
 ========================================
 
-Two builds, install one
-
-    macOS 26 or later
-    macOS 15 to 25
-
-Not sure which macOS you have: click ${APPLE_LOGO} in the top-left corner of the screen
-→ About This Mac.
-
-Open the matching folder, drag Dejima.app onto the Applications alias beside it.
+Install
+Drag Dejima.app onto the Applications alias beside it. Requires macOS 15 or later.
 
 First launch
 1. Open Dejima from Applications and follow the guide to grant Accessibility access.
@@ -340,7 +292,6 @@ First launch
    to see the translation.
 
 If something goes wrong
-· Says it needs a newer macOS: install the one in the “macOS 15 to 25” folder.
 · Pressing ⌘C twice does nothing: menu bar icon → Grant Accessibility access…
 · Missing translation languages: menu bar icon → Translation language settings.
   Check or download the languages you need there.
@@ -357,14 +308,8 @@ Translation happens entirely on device. Nothing you translate reaches a server.
 日本語
 ========================================
 
-2つのビルド、片方だけ入れてください
-
-    macOS 26 以降
-    macOS 15〜25
-
-macOS のバージョンがわからない場合: 画面左上の ${APPLE_LOGO} → このMacについて。
-
-対応するフォルダを開き、Dejima.app を隣の Applications にドラッグします。
+インストール
+Dejima.app を隣の Applications にドラッグします。macOS 15 以降が必要です。
 
 初めて使うとき
 1. 「アプリケーション」から Dejima を開き、案内に従ってアクセシビリティ権限を許可します。
@@ -374,7 +319,6 @@ macOS のバージョンがわからない場合: 画面左上の ${APPLE_LOGO} 
 3. テキストをコピーできるアプリで文章を選び、⌘C をすばやく2回押すと訳文が表示されます。
 
 困ったときは
-・新しい macOS が必要と表示される: 「macOS 15〜25」フォルダの方を入れてください。
 ・⌘C を2回押しても反応しない: メニューバーアイコン → アクセシビリティ権限を与える…
 ・翻訳言語が不足していると表示される: メニューバーアイコン → 翻訳言語の設定。
   必要な言語を確認、ダウンロードできます。
@@ -391,14 +335,8 @@ macOS のバージョンがわからない場合: 画面左上の ${APPLE_LOGO} 
 한국어
 ========================================
 
-두 가지 빌드가 있습니다. 하나만 설치하세요
-
-    macOS 26 이상
-    macOS 15~25
-
-macOS 버전을 모르겠다면: 화면 왼쪽 위의 ${APPLE_LOGO} → 이 Mac에 관하여.
-
-맞는 폴더를 열고 Dejima.app을 옆에 있는 Applications로 드래그하세요.
+설치
+Dejima.app을 옆에 있는 Applications로 드래그하세요. macOS 15 이상이 필요합니다.
 
 처음 사용할 때
 1. 응용 프로그램에서 Dejima를 열고 안내에 따라 손쉬운 사용 권한을 허용하세요.
@@ -408,7 +346,6 @@ macOS 버전을 모르겠다면: 화면 왼쪽 위의 ${APPLE_LOGO} → 이 Mac�
 3. 텍스트 복사를 지원하는 앱에서 글을 선택하고 ⌘C를 빠르게 두 번 눌러 번역을 확인하세요.
 
 문제가 생겼을 때
-· 더 새로운 macOS가 필요하다고 나오면: ‘macOS 15~25’ 폴더의 빌드를 설치하세요.
 · ⌘C를 두 번 눌러도 반응이 없으면: 메뉴 막대 아이콘 → 손쉬운 사용 권한 부여…
 · 번역 언어가 없다고 나오면: 메뉴 막대 아이콘 → 번역 언어 설정에서
   필요한 언어를 확인하거나 다운로드하세요.
@@ -441,12 +378,12 @@ trap cleanup_mount EXIT
 MOUNT=$(hdiutil attach "$RW" -nobrowse -noverify -noautoopen | sed -n 's|.*\(/Volumes/.*\)$|\1|p' | head -1)
 [ -n "$MOUNT" ] || { echo "error: could not tell where $RW mounted" >&2; exit 1; }
 
-# -R keeps the Applications symlinks as symlinks, and the trailing /. takes
+# -R keeps the Applications symlink as a symlink, and the trailing /. takes
 # the hidden .background folder along with everything else.
 cp -R "$STAGE"/. "$MOUNT"/
 
-echo "==> Laying out the DMG windows"
-swift_tool Scripts/dmg-window.swift layout "$MOUNT" "$FOLDER_NEW" "$FOLDER_OLD" "$ICON"
+echo "==> Laying out the DMG window"
+swift_tool Scripts/dmg-window.swift layout "$MOUNT" "$ICON"
 sync
 
 hdiutil detach "$MOUNT" >/dev/null 2>&1 || hdiutil detach "$MOUNT" -force >/dev/null
@@ -467,44 +404,34 @@ else
     echo "==> Gatekeeper check"
     spctl -a -t open --context context:primary-signature -v "$DMG"
 
-    # The submitted DMG contains these exact signed app bundles.
-    for folder in "$FOLDER_OLD" "$FOLDER_NEW"; do
-        xcrun stapler staple "$STAGE/$folder/Dejima.app"
-        xcrun stapler validate "$STAGE/$folder/Dejima.app"
-        codesign --verify --strict --deep "$STAGE/$folder/Dejima.app"
-        spctl -a -t exec -v "$STAGE/$folder/Dejima.app"
-    done
+    # The submitted DMG contains this exact signed app bundle.
+    xcrun stapler staple "$APP"
+    xcrun stapler validate "$APP"
+    codesign --verify --strict --deep "$APP"
+    spctl -a -t exec -v "$APP"
 fi
 
 artifacts=("$DMG")
 
-# $1 minimum macOS major version, $2 folder inside the DMG.
-package_update() {
-    local minimum="$1" folder="$2"
-    local updates="$BUILD/updates/macos$minimum"
-    local archive="$updates/Dejima-$VERSION-macos$minimum$DMG_SUFFIX.zip"
-    local appcast="$updates/appcast-macos$minimum.xml"
-    mkdir -p "$updates"
-    echo "==> Packaging the macOS $minimum update"
-    quiet ditto -c -k --sequesterRsrc --keepParent "$STAGE/$folder/Dejima.app" "$archive"
-    artifacts+=("$archive")
+UPDATES="$BUILD/updates"
+ARCHIVE="$UPDATES/Dejima-$VERSION$DMG_SUFFIX.zip"
+APPCAST="$UPDATES/appcast.xml"
+mkdir -p "$UPDATES"
+echo "==> Packaging the update"
+quiet ditto -c -k --sequesterRsrc --keepParent "$APP" "$ARCHIVE"
+artifacts+=("$ARCHIVE")
 
-    if [ "$LOCAL_BUILD" -eq 0 ]; then
-        quiet "$SPARKLE_BIN/generate_appcast" --account "$SPARKLE_KEY_ACCOUNT" \
-            --download-url-prefix "$RELEASE_URL/" --maximum-deltas 0 \
-            --link "https://github.com/AIChemist-Nuki/dejima/releases/tag/v$VERSION" \
-            -o "$appcast" "$updates"
-        quiet "$SPARKLE_BIN/sign_update" --account "$SPARKLE_KEY_ACCOUNT" --verify "$appcast"
-        local signature
-        signature=$(xmllint --xpath 'string(/rss/channel/item/enclosure/@*[local-name()="edSignature"])' "$appcast")
-        [ -n "$signature" ] || { echo "error: the update archive has no EdDSA signature" >&2; exit 1; }
-        quiet "$SPARKLE_BIN/sign_update" --account "$SPARKLE_KEY_ACCOUNT" --verify "$archive" "$signature"
-        artifacts+=("$appcast")
-    fi
-}
-
-package_update 15 "$FOLDER_OLD"
-package_update 26 "$FOLDER_NEW"
+if [ "$LOCAL_BUILD" -eq 0 ]; then
+    quiet "$SPARKLE_BIN/generate_appcast" --account "$SPARKLE_KEY_ACCOUNT" \
+        --download-url-prefix "$RELEASE_URL/" --maximum-deltas 0 \
+        --link "https://github.com/AIChemist-Nuki/dejima/releases/tag/v$VERSION" \
+        -o "$APPCAST" "$UPDATES"
+    quiet "$SPARKLE_BIN/sign_update" --account "$SPARKLE_KEY_ACCOUNT" --verify "$APPCAST"
+    signature=$(xmllint --xpath 'string(/rss/channel/item/enclosure/@*[local-name()="edSignature"])' "$APPCAST")
+    [ -n "$signature" ] || { echo "error: the update archive has no EdDSA signature" >&2; exit 1; }
+    quiet "$SPARKLE_BIN/sign_update" --account "$SPARKLE_KEY_ACCOUNT" --verify "$ARCHIVE" "$signature"
+    artifacts+=("$APPCAST")
+fi
 
 for artifact in "${artifacts[@]}"; do
     mv -f "$artifact" "$DIST/"
