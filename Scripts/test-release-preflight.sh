@@ -76,8 +76,6 @@ export FIXTURE_DIRTY=1
 check_failure uncommitted-changes 'uncommitted changes'
 unset FIXTURE_DIRTY
 
-check_failure missing-profile 'NOTARY_PROFILE is required'
-export NOTARY_PROFILE=fixture-profile
 check_failure missing-developer-id 'Found 0 matching identities'
 
 printf '%s\n' '  1) 0123456789ABCDEF0123456789ABCDEF01234567 "Developer ID Application: Example (ABCDEFGHIJ)"' > "$RELEASE_FIXTURE/identities"

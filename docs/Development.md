@@ -115,7 +115,7 @@ This builds both targets with ad-hoc signing in `build/local` and creates a `-lo
 
 ## Package a release
 
-Public release packaging requires a clean working tree, a valid Developer ID Application identity with its private key, a `NOTARY_PROFILE`, and the matching Sparkle signing key in Keychain. Missing or invalid credentials stop the script before it creates a tag. Public packaging does not fall back to development signing.
+Public release packaging requires a clean working tree, a valid Developer ID Application identity with its private key, a notarization Keychain profile, and the matching Sparkle signing key in Keychain. Missing or invalid credentials stop the script before it creates a tag. Public packaging does not fall back to development signing.
 
 Store notarization credentials in a Keychain profile using the interactive prompt:
 
@@ -126,12 +126,10 @@ xcrun notarytool store-credentials dejima
 With the release changes committed, run:
 
 ```bash
-CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
-NOTARY_PROFILE=dejima \
 ./Scripts/release.sh 0.3.0
 ```
 
-Replace the identity and version with your own. If exactly one valid Developer ID Application identity is installed, `CODE_SIGN_IDENTITY` can be omitted. The version argument creates a local `vX.Y.Z` tag on HEAD after preflight checks and before building. If HEAD is already tagged, omit the argument, including when retrying a failed build. The script does not push tags or publish a GitHub release.
+Replace the version with your own. The notarization profile defaults to `dejima`; set `NOTARY_PROFILE` to use another. If exactly one valid Developer ID Application identity is installed, it is selected automatically; otherwise set `CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)"`. The version argument creates a local `vX.Y.Z` tag on HEAD after preflight checks and before building. If HEAD is already tagged, omit the argument, including when retrying a failed build. The script does not push tags or publish a GitHub release.
 
 Release versions come from the tag. The script sets both `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` to that version, so `CFBundleShortVersionString` and `CFBundleVersion` match. Sparkle compares `CFBundleVersion` to determine update order; use an increasing version for each release. The project settings supply the versions for ordinary development builds.
 

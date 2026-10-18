@@ -22,7 +22,7 @@
 #   ./Scripts/release.sh
 #
 # A single installed Developer ID identity is selected automatically.
-# SPARKLE_KEY_ACCOUNT defaults to com.nuki.Dejima.
+# NOTARY_PROFILE defaults to dejima. SPARKLE_KEY_ACCOUNT defaults to com.nuki.Dejima.
 #
 # Store notarization credentials before publishing:
 #
@@ -98,9 +98,7 @@ SPARKLE_KEY_ACCOUNT="${SPARKLE_KEY_ACCOUNT:-com.nuki.Dejima}"
 RELEASE_URL="https://github.com/AIChemist-Nuki/dejima/releases/download/v$VERSION"
 
 if [ "$LOCAL_BUILD" -eq 0 ]; then
-    [ -n "${NOTARY_PROFILE:-}" ] || {
-        echo "error: NOTARY_PROFILE is required for public release packaging" >&2; exit 1
-    }
+    NOTARY_PROFILE="${NOTARY_PROFILE:-dejima}"
     identities=$(security find-identity -v -p codesigning | sed -nE \
         's/^[[:space:]]*[0-9]+\) ([[:xdigit:]]{40}) "(Developer ID Application:.*)"$/\1\t\2/p' | sort -u)
     matching_identities=()
