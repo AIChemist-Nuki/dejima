@@ -18,7 +18,7 @@
 
 ### 1. インストールして、アクセスを許可
 
-ダウンロードした DMG を開き、使用中のシステムに合う **macOS 15〜25** または **macOS 26 以降** フォルダを選びます。`Dejima.app` を Applications にドラッグしてから起動してください。
+ダウンロードした DMG を開き、`Dejima.app` を Applications にドラッグしてから起動してください。
 
 アプリの案内に従ってシステム設定のアクセシビリティのリストを開き、Dejima をドラッグして許可をオンにします。許可されると、案内は言語の選択へ進みます。
 
@@ -91,6 +91,6 @@ Dejima の名前は、長崎の人工島[「出島」](https://nagasakidejima.jp
 
 ## 開発
 
-Xcode で `Dejima.xcodeproj` を開き、署名を設定してください。ビルドに必要な環境、2つのバージョンの違い、配布用パッケージの作成方法は [Development](docs/Development.md)（英語）を参照してください。
+Xcode で `Dejima.xcodeproj` を開き、署名を設定してください。ビルドに必要な環境、macOS のバージョンごとの翻訳の実装、配布用パッケージの作成方法は [Development](docs/Development.md)（英語）を参照してください。
 
 MIT ライセンスです。[LICENSE](LICENSE) を参照してください。

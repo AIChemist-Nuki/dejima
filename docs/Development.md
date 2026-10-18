@@ -14,35 +14,32 @@ Open the checked-in project from the repository root:
 open Dejima.xcodeproj
 ```
 
-In each target's **Signing & Capabilities** settings, choose your team or **Sign to Run Locally**. Use a consistent signing identity when testing Accessibility access; changing signatures or app copies can require granting access again.
+In the target's **Signing & Capabilities** settings, choose your team or **Sign to Run Locally**. Use a consistent signing identity when testing Accessibility access; changing signatures or app copies can require granting access again.
 
-Choose a scheme and run it in Xcode, or build from the command line after configuring signing:
+Run the `Dejima` scheme in Xcode, or build from the command line after configuring signing:
 
 ```bash
 xcodebuild -project Dejima.xcodeproj -scheme Dejima -configuration Release -destination 'generic/platform=macOS' build
-xcodebuild -project Dejima.xcodeproj -scheme Dejima26 -configuration Release -destination 'generic/platform=macOS' build
 ```
 
 Run `./Scripts/test-release-preflight.sh` to check that invalid release settings stop before tagging or building. The tests use temporary fixtures and stub commands; they do not access signing credentials or notarization services.
 
-## Translation targets
+## Translation implementations
 
-The targets share the app code and bundle identifier. Each includes one implementation of `TranslationHub`.
+One app supports macOS 15 and later. `TranslationHub` selects an implementation when the app launches:
 
-| Target | Minimum macOS | Translation session |
+| Running macOS | Implementation | Translation session |
 |---|---|---|
-| `Dejima` | 15 | A SwiftUI `translationTask` attached to a hidden host window |
-| `Dejima26` | 26 | `TranslationSession(installedSource:target:)` |
+| 15–25 | `HostedTranslator` | A SwiftUI `translationTask` attached to a hidden host window |
+| 26 and later | `DirectTranslator` | `TranslationSession(installedSource:target:)` |
 
-The legacy implementation can ask the framework to identify the source language and request language downloads. The direct session API requires a source language and installed models. The macOS 26 implementation retries language identification when the router has no confident result, and reports missing models as an error.
+The hosted implementation can ask the framework to identify the source language and request language downloads. The direct session API requires a source language and installed models. The direct implementation retries language identification when the router has no confident result, and reports missing models as an error.
 
-The `Dejima26` target produces `Dejima26.app` to avoid overwriting the other target's output. Packaging renames both builds to `Dejima.app` and puts them in separate folders.
-
-Optional refinement uses Foundation Models when available on macOS 26 or later. Both targets include the same refinement code.
+Optional refinement uses Foundation Models when available on macOS 26 or later.
 
 ## First-run language setup
 
-The permission guide continues to a shared language setup view after Accessibility is granted. Both targets use a visible `translationTask` session and `prepareTranslation()` to request any missing languages. The ordinary macOS 26 translation path still uses installed models directly.
+The permission guide continues to a shared language setup view after Accessibility is granted. Setup uses a visible `translationTask` session on every macOS version and `prepareTranslation()` to request any missing languages. The ordinary macOS 26 translation path still uses installed models directly.
 
 Setup checks both directions for the two selected languages using the same default strategy as translation. Existing Apple Intelligence models can satisfy that check without downloading traditional language packs. A successful `prepareTranslation()` return is not proof that downloads have finished, so setup rechecks availability before enabling **Get started**. Closing or postponing setup does not mark it complete. Other source languages may need downloads later.
 
@@ -74,22 +71,22 @@ For timing and request inspection, use Apple's [Foundation Models instrument](ht
 
 ## Source layout
 
-The project's `Sources` group contains three file system synchronized folders. `Shared` belongs to both targets, `TranslationLegacy` only to `Dejima`, and `Translation26` only to `Dejima26`. Add shared Swift files under `Sources/Shared` and target-specific files under the matching translation folder; Xcode discovers them automatically.
+The project's `Sources` group contains the file system synchronized folder `Shared`. Add Swift files under `Sources/Shared`; Xcode discovers them automatically.
 
 - `Sources/Shared/Controller.swift` connects permissions, key monitoring, translation, and the result panel.
 - `Sources/Shared/DoubleCopyMonitor.swift` detects the copy gesture and reads the clipboard.
 - `Sources/Shared/LanguageRouter.swift` selects the translation direction; `TextCleaner.swift` repairs copied line breaks.
-- `Sources/TranslationLegacy/` and `Sources/Translation26/` contain the target-specific translation implementations.
+- `Sources/Shared/TranslationHub.swift` selects `HostedTranslator.swift` or `DirectTranslator.swift` for the running macOS version.
 - `Sources/Shared/Polisher.swift` handles optional refinement and returns the draft on failure.
 - `Sources/Shared/PermissionGuide.swift`, `MenuBarView.swift`, `ResultPanel.swift`, and `ResultView.swift` provide the interface.
 - `Sources/Shared/LanguageSetup.swift` checks the selected languages and requests downloads during setup.
 - `Sources/Shared/Updater.swift` manages Sparkle updates; `LoginItem.swift` manages launch at login.
 
-UI translations are stored in `Localizable.xcstrings` and `InfoPlist.xcstrings`. These catalogs, `Assets.xcassets`, and `AppIcon.icon` are shared resources at the repository root. Keep them included in both targets and update the project's language list in Xcode when adding localizations.
+UI translations are stored in `Localizable.xcstrings` and `InfoPlist.xcstrings`. These catalogs, `Assets.xcassets`, and `AppIcon.icon` are shared resources at the repository root. Keep them included in the target and update the project's language list in Xcode when adding localizations.
 
 ## App icon
 
-Edit `AppIcon.icon` in Icon Composer. Xcode uses it for both targets and generates compatible icons for older macOS releases. The menu bar symbol remains in `Sources/Shared/DejimaMark.swift`.
+Edit `AppIcon.icon` in Icon Composer. Xcode uses it for the app and generates compatible icons for older macOS releases. The menu bar symbol remains in `Sources/Shared/DejimaMark.swift`.
 
 Run `./Scripts/app-icon.sh` with Xcode 27 selected to refresh the PNGs in `Assets.xcassets/AppIcon.appiconset`. These exports include the traditional macOS inset; packaging uses `icon_512.png` for DMG artwork and the volume icon.
 
@@ -99,7 +96,7 @@ Sparkle 2.10.0 handles downloading, installing, and relaunching the app. **Check
 
 Automatic checks are off by default. The existing `checkForUpdatesAutomatically` preference is migrated, and enabled checks run daily in the background. System profiling is disabled. Checks and downloads contact the GitHub update feeds and release download services without sending translated text.
 
-The running macOS version selects `appcast-macos15.xml` on macOS 15–25 or `appcast-macos26.xml` on macOS 26 and later. Each feed points to a ZIP containing the corresponding single `Dejima.app`. The combined DMG remains the first-install and manual-install download. Users of older versions must install the first Sparkle-enabled release manually once.
+`SUFeedURL` in `Info.plist` points to `appcast.xml` in the latest GitHub release. The feed points to a ZIP containing `Dejima.app`. The DMG remains the first-install and manual-install download. Users of older versions must install the first Sparkle-enabled release manually once.
 
 The public update key is stored in `SUPublicEDKey` in `Info.plist`. Keep the matching private key in the login Keychain under account `com.nuki.Dejima`, or select its account with `SPARKLE_KEY_ACCOUNT` when packaging. Never commit the private key. Signed feeds and archives are required and verified before release artifacts are placed in `dist`.
 
@@ -111,7 +108,7 @@ To test packaging with uncommitted changes:
 ./Scripts/release.sh --local 0.3.0
 ```
 
-This builds both targets with ad-hoc signing in `build/local` and creates a `-local.dmg` plus two `-local.zip` archives in `dist`. It does not create tags, notarize, update provisioning assets, or generate update feeds. These packages are for local testing and must not be published as production updates.
+This builds the app with ad-hoc signing in `build/local` and creates a `-local.dmg` and a `-local.zip` archive in `dist`. It does not create tags, notarize, update provisioning assets, or generate update feeds. These packages are for local testing and must not be published as production updates.
 
 ## Package a release
 
@@ -133,18 +130,16 @@ Replace the version with your own. The notarization profile defaults to `dejima`
 
 Release versions come from the tag. The script sets both `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` to that version, so `CFBundleShortVersionString` and `CFBundleVersion` match. Sparkle compares `CFBundleVersion` to determine update order; use an increasing version for each release. The project settings supply the versions for ordinary development builds.
 
-The script replaces `build/release`, archives and exports both targets, verifies Developer ID signatures, notarizes the DMG and staples the tickets, then signs and verifies the update feeds and archives. Successful packaging produces five files in `dist`:
+The script replaces `build/release`, archives and exports the app, verifies its Developer ID signature, notarizes the DMG and staples the tickets, then signs and verifies the update feed and archive. Successful packaging produces three files in `dist`:
 
 | File | Purpose |
 | --- | --- |
-| `Dejima-<version>.dmg` | Both variants for first or manual installation |
-| `Dejima-<version>-macos15.zip` | App update for macOS 15–25 |
-| `Dejima-<version>-macos26.zip` | App update for macOS 26 and later |
-| `appcast-macos15.xml` | Signed update feed for macOS 15–25 |
-| `appcast-macos26.xml` | Signed update feed for macOS 26 and later |
+| `Dejima-<version>.dmg` | First or manual installation |
+| `Dejima-<version>.zip` | App update archive |
+| `appcast.xml` | Signed update feed |
 
-Push the tag and upload all five files to the same GitHub release as a separate publishing step. The app reads the latest release's feeds, whose archive links point to the matching versioned release downloads. Upload the complete set before publishing the release.
+Push the tag and upload all three files to the same GitHub release as a separate publishing step. The app reads the latest release's feed, whose archive link points to the matching versioned release download. Upload the complete set before publishing the release.
 
-The DMG contains one folder per minimum macOS version, each with `Dejima.app` and an Applications shortcut. Folder names and installation instructions are localized in English, Simplified Chinese, Japanese, and Korean.
+The DMG contains `Dejima.app`, an Applications shortcut, and a Read Me. The window background and Read Me are written in English, Simplified Chinese, Japanese, and Korean.
 
-DMG backgrounds are generated by `Scripts/dmg-window.swift`. The packaging steps and localized folder names are maintained in `Scripts/release.sh`.
+The DMG background is generated by `Scripts/dmg-window.swift`. The packaging steps and Read Me text are maintained in `Scripts/release.sh`.

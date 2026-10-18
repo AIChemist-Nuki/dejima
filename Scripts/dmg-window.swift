@@ -1,11 +1,11 @@
 #!/usr/bin/env swift
 //
-// Draws backgrounds and writes Finder layouts for the release DMG.
+// Draws the background and writes the Finder layout for the release DMG.
 //
 //   swift Scripts/dmg-window.swift art <output directory> <version> <icon>
-//   swift Scripts/dmg-window.swift layout <mounted volume> <newer folder> <older folder> <icon>
+//   swift Scripts/dmg-window.swift layout <mounted volume> <icon>
 //
-// `art` produces 1x/2x backgrounds for release.sh to combine into HiDPI TIFFs.
+// `art` produces 1x/2x backgrounds for release.sh to combine into a HiDPI TIFF.
 // `layout` writes window settings and icon positions to .DS_Store.
 // Both use points measured from the top-left of the window's content area.
 // Writing .DS_Store directly avoids Finder discarding scripted view settings.
@@ -15,23 +15,14 @@ import Carbon
 
 // MARK: - Geometry
 
-/// Layout for the volume's root window.
-enum Root {
+/// Layout for the volume's window.
+enum Layout {
     static let size = CGSize(width: 660, height: 520)
     static let iconSize: CGFloat = 80
-    /// Keep icon centers aligned with the background captions.
-    static let newer = CGPoint(x: 200, y: 292)
-    static let older = CGPoint(x: 460, y: 292)
+    /// Keep icon centers aligned with the arrow and drop target in the background.
+    static let app = CGPoint(x: 200, y: 310)
+    static let applications = CGPoint(x: 460, y: 310)
     static let readMe = CGPoint(x: 584, y: 452)
-    static let slotWidth: CGFloat = 240
-}
-
-/// Shared layout for the two build folders.
-enum Build {
-    static let size = CGSize(width: 540, height: 360)
-    static let iconSize: CGFloat = 96
-    static let app = CGPoint(x: 140, y: 200)
-    static let applications = CGPoint(x: 400, y: 200)
 }
 
 // MARK: - Palette
@@ -158,7 +149,7 @@ func drawArt(into directory: URL, version: String, icon: NSImage) throws {
         }
     }
 
-    try write("root", Root.size) { canvas in
+    try write("background", Layout.size) { canvas in
         let mark: CGFloat = 60
         icon.draw(in: CGRect(x: (canvas.width - mark) / 2, y: canvas.height - 20 - mark,
                              width: mark, height: mark))
@@ -168,62 +159,24 @@ func drawArt(into directory: URL, version: String, icon: NSImage) throws {
         line(version, font: font(11), color: Palette.faint,
              top: 128, width: canvas.width, canvas: canvas)
 
-        line("打开与你的系统相符的那个文件夹", font: font(13, .medium, .chinese), color: Palette.muted,
+        line("把 Dejima 拖到 Applications", font: font(13, .medium, .chinese), color: Palette.muted,
              top: 156, width: canvas.width, canvas: canvas)
-        line("Open the folder that matches your macOS", font: font(12), color: Palette.muted,
+        line("Drag Dejima onto Applications", font: font(12), color: Palette.muted,
              top: 178, width: canvas.width, canvas: canvas)
-        line("お使いの macOS に合うフォルダを開いてください", font: font(12, .regular, .japanese), color: Palette.muted,
+        line("Dejima を Applications にドラッグ", font: font(12, .regular, .japanese), color: Palette.muted,
              top: 197, width: canvas.width, canvas: canvas)
-        line("사용 중인 macOS에 맞는 폴더를 여세요", font: font(12, .regular, .korean), color: Palette.muted,
+        line("Dejima를 Applications로 드래그", font: font(12, .regular, .korean), color: Palette.muted,
              top: 216, width: canvas.width, canvas: canvas)
 
-        for (slot, chinese, english) in [
-            (Root.newer, "系统是 macOS 26 或更新", "macOS 26 and later"),
-            (Root.older, "系统是 macOS 15 到 25", "macOS 15 through 25"),
-        ] {
-            let left = slot.x - Root.slotWidth / 2
-            frame(top: 238, left: left, width: Root.slotWidth, height: 172, canvas: canvas,
-                  fill: Palette.card, stroke: Palette.rule)
-            line(chinese, font: font(12, .medium, .chinese), color: Palette.ink,
-                 top: 364, left: left, width: Root.slotWidth, canvas: canvas)
-            line(english, font: font(11), color: Palette.faint,
-                 top: 384, left: left, width: Root.slotWidth, canvas: canvas)
-        }
-
-        // Stops short of the Read Me in the corner.
-        Palette.rule.setFill()
-        CGRect(x: 60, y: canvas.height - 430, width: 440, height: 1).fill()
-
-        for (top, text, lineFont) in [
-            (CGFloat(442), "不确定是哪个版本：屏幕左上角的 \u{F8FF} → 关于本机", font(11, .regular, .chinese)),
-            (CGFloat(460), "Not sure which macOS you have? \u{F8FF} (top-left of the screen) → About This Mac", font(11)),
-            (CGFloat(478), "バージョンの確認: 画面左上の \u{F8FF} → このMacについて", font(11, .regular, .japanese)),
-            (CGFloat(496), "버전 확인: 화면 왼쪽 위의 \u{F8FF} → 이 Mac에 관하여", font(11, .regular, .korean)),
-        ] {
-            line(text, font: lineFont, color: Palette.faint, alignment: .left,
-                 top: top, left: 60, width: 440, canvas: canvas)
-        }
-    }
-
-    try write("folder", Build.size) { canvas in
-        line("把 Dejima 拖到 Applications", font: font(17, .semibold, .chinese), color: Palette.ink,
-             top: 30, width: canvas.width, canvas: canvas)
-        line("Drag Dejima onto Applications", font: font(12), color: Palette.muted,
-             top: 62, width: canvas.width, canvas: canvas)
-        line("Dejima を Applications にドラッグ", font: font(12, .regular, .japanese), color: Palette.muted,
-             top: 81, width: canvas.width, canvas: canvas)
-        line("Dejima를 Applications로 드래그", font: font(12, .regular, .korean), color: Palette.muted,
-             top: 100, width: canvas.width, canvas: canvas)
-
-        frame(top: Build.applications.y - 74, left: Build.applications.x - 82,
-              width: 164, height: 156, canvas: canvas,
+        frame(top: Layout.applications.y - 70, left: Layout.applications.x - 80,
+              width: 160, height: 150, canvas: canvas,
               fill: Palette.card,
               stroke: Palette.accent.withAlphaComponent(0.55), dashed: true)
 
         // Leave space between the arrow, icons and drop target.
-        let start = Build.app.x + 66
-        let end = Build.applications.x - 88
-        let y = canvas.height - Build.app.y
+        let start = Layout.app.x + 56
+        let end = Layout.applications.x - 88
+        let y = canvas.height - Layout.app.y
         let head: CGFloat = 13
 
         Palette.accent.setStroke()
@@ -241,6 +194,20 @@ func drawArt(into directory: URL, version: String, icon: NSImage) throws {
         tip.line(to: CGPoint(x: end - head, y: y - head * 0.72))
         tip.close()
         tip.fill()
+
+        // Stops short of the Read Me in the corner.
+        Palette.rule.setFill()
+        CGRect(x: 60, y: canvas.height - 430, width: 440, height: 1).fill()
+
+        for (top, text, lineFont) in [
+            (CGFloat(442), "需要 macOS 15 或更新版本", font(11, .regular, .chinese)),
+            (CGFloat(460), "Requires macOS 15 or later", font(11)),
+            (CGFloat(478), "macOS 15 以降が必要です", font(11, .regular, .japanese)),
+            (CGFloat(496), "macOS 15 이상이 필요합니다", font(11, .regular, .korean)),
+        ] {
+            line(text, font: lineFont, color: Palette.faint, alignment: .left,
+                 top: top, left: 60, width: 440, canvas: canvas)
+        }
     }
 }
 
@@ -453,30 +420,16 @@ func iconViewSettings(iconSize: CGFloat, background: URL) -> [String: Any] {
     ]
 }
 
-func installLayout(volume: URL, newerFolder: String, olderFolder: String, icon: NSImage) throws {
+func installLayout(volume: URL, icon: NSImage) throws {
     NSWorkspace.shared.setIcon(icon, forFile: volume.path)
 
-    let backgrounds = volume.appendingPathComponent(".background")
-    let buildFolders = [newerFolder, olderFolder]
-
-    var root = DSStore()
-    try root.window(".", size: Root.size, iconSize: Root.iconSize,
-                    background: backgrounds.appendingPathComponent("root.tiff"))
-    root.place(newerFolder, at: Root.newer)
-    root.place(olderFolder, at: Root.older)
-    root.place("Read Me.txt", at: Root.readMe)
-    for folder in buildFolders {
-        try root.window(folder, size: Build.size, iconSize: Build.iconSize,
-                        background: backgrounds.appendingPathComponent("folder.tiff"))
-    }
-    try root.write(to: volume.appendingPathComponent(".DS_Store"))
-
-    for folder in buildFolders {
-        var build = DSStore()
-        build.place("Dejima.app", at: Build.app)
-        build.place("Applications", at: Build.applications)
-        try build.write(to: volume.appendingPathComponent(folder).appendingPathComponent(".DS_Store"))
-    }
+    var store = DSStore()
+    try store.window(".", size: Layout.size, iconSize: Layout.iconSize,
+                     background: volume.appendingPathComponent(".background/background.tiff"))
+    store.place("Dejima.app", at: Layout.app)
+    store.place("Applications", at: Layout.applications)
+    store.place("Read Me.txt", at: Layout.readMe)
+    try store.write(to: volume.appendingPathComponent(".DS_Store"))
 }
 
 // MARK: - Entry point
@@ -498,15 +451,13 @@ do {
         try drawArt(into: URL(fileURLWithPath: arguments[2], isDirectory: true),
                     version: arguments[3],
                     icon: loadIcon(arguments[4]))
-    case "layout" where arguments.count == 6:
+    case "layout" where arguments.count == 4:
         try installLayout(volume: URL(fileURLWithPath: arguments[2], isDirectory: true),
-                          newerFolder: arguments[3],
-                          olderFolder: arguments[4],
-                          icon: loadIcon(arguments[5]))
+                          icon: loadIcon(arguments[3]))
     default:
         FileHandle.standardError.write(Data("""
             usage: dmg-window.swift art <output directory> <version> <icon>
-                   dmg-window.swift layout <mounted volume> <newer folder> <older folder> <icon>
+                   dmg-window.swift layout <mounted volume> <icon>
 
             """.utf8))
         exit(2)

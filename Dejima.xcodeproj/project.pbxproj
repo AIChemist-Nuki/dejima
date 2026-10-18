@@ -8,25 +8,18 @@
 
 /* Begin PBXBuildFile section */
 		09285642844843A79C0F1701 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = A415B8579DAA4308927D1100 /* ThirdPartyNotices.txt */; };
-		09285642844843A79C0F1702 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = A415B8579DAA4308927D1100 /* ThirdPartyNotices.txt */; };
-		7B5F04013EED478ABC83F901 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BC734AAA31AB4E4AA0F03A01 /* Sparkle */; };
-		7B5F04013EED478ABC83F902 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BC734AAA31AB4E4AA0F03A02 /* Sparkle */; };
-		122ADCC96739872A46FABC4C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B08E74E629983C1F1AD319AF /* Assets.xcassets */; };
-		1F0EE4DBC0D6D62EBA00ADDD /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = D88590C10C2E521B7AD996E5 /* AppIcon.icon */; };
 		2966ADAD8A9B44F36A2EC639 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C4331311CC03F48024D55204 /* InfoPlist.xcstrings */; };
-		79CBC0F4A3EA1CBA6B65B71B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */; };
-		BC81F9F2ED2B74D5AC77050D /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C4331311CC03F48024D55204 /* InfoPlist.xcstrings */; };
+		7B5F04013EED478ABC83F901 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BC734AAA31AB4E4AA0F03A01 /* Sparkle */; };
 		CA3EEE913BA39B125421729F /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */; };
 		F0158B759C60A9D4685B33DB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B08E74E629983C1F1AD319AF /* Assets.xcassets */; };
 		F1C6D420A42CB157F57D8941 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = D88590C10C2E521B7AD996E5 /* AppIcon.icon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A415B8579DAA4308927D1100 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
+		0B0A99D654C0B99D9DB945BB /* Dejima.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dejima.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D279A6343494934A2539A1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7E23B9AD73974BA3AB34D118 /* Dejima.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dejima.entitlements; sourceTree = "<group>"; };
-		0B0A99D654C0B99D9DB945BB /* Dejima.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dejima.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		6B80123CC84D4D7515E3C005 /* Dejima26.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dejima26.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A415B8579DAA4308927D1100 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
 		B08E74E629983C1F1AD319AF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C4331311CC03F48024D55204 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
@@ -36,43 +29,23 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		18F3A1BC9ED64149A7D7AA1E /* Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			explicitFileTypes = {};
-			explicitFolders = ();
 			path = Shared;
-			sourceTree = "<group>";
-		};
-		7B1C6C1F9406455BB143A762 /* TranslationLegacy */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			explicitFileTypes = {};
-			explicitFolders = ();
-			path = TranslationLegacy;
-			sourceTree = "<group>";
-		};
-		CFB278E34599438D8C21E688 /* Translation26 */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			explicitFileTypes = {};
-			explicitFolders = ();
-			path = Translation26;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		CFA41D2F3938474FA4A02C01 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (7B5F04013EED478ABC83F901 /* Sparkle in Frameworks */, ); runOnlyForDeploymentPostprocessing = 0; };
-		CFA41D2F3938474FA4A02C02 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (7B5F04013EED478ABC83F902 /* Sparkle in Frameworks */, ); runOnlyForDeploymentPostprocessing = 0; };
+		CFA41D2F3938474FA4A02C01 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7B5F04013EED478ABC83F901 /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		534242EC796B1AB36248C4FF /* Sources */ = {
-			isa = PBXGroup;
-			children = (
-				18F3A1BC9ED64149A7D7AA1E /* Shared */,
-				7B1C6C1F9406455BB143A762 /* TranslationLegacy */,
-				CFB278E34599438D8C21E688 /* Translation26 */,
-			);
-			path = Sources;
-			sourceTree = "<group>";
-		};
 		2208951A8FAB67470FCA8B4B = {
 			isa = PBXGroup;
 			children = (
@@ -88,11 +61,18 @@
 			);
 			sourceTree = "<group>";
 		};
+		534242EC796B1AB36248C4FF /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				18F3A1BC9ED64149A7D7AA1E /* Shared */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
 		675F5FECA2FD13B15F926B87 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				0B0A99D654C0B99D9DB945BB /* Dejima.app */,
-				6B80123CC84D4D7515E3C005 /* Dejima26.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -114,7 +94,6 @@
 			);
 			fileSystemSynchronizedGroups = (
 				18F3A1BC9ED64149A7D7AA1E /* Shared */,
-				7B1C6C1F9406455BB143A762 /* TranslationLegacy */,
 			);
 			name = Dejima;
 			packageProductDependencies = (
@@ -122,30 +101,6 @@
 			);
 			productName = Dejima;
 			productReference = 0B0A99D654C0B99D9DB945BB /* Dejima.app */;
-			productType = "com.apple.product-type.application";
-		};
-		F844F12557D0FD3BF9F622FC /* Dejima26 */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = F916AC790CCAA7D974B7AF73 /* Build configuration list for PBXNativeTarget "Dejima26" */;
-			buildPhases = (
-				CFA41D2F3938474FA4A02C02 /* Frameworks */,
-				9123D8ED6B0C161213BD968E /* Sources */,
-				9C9C52B2B64080AB9C765F4E /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				18F3A1BC9ED64149A7D7AA1E /* Shared */,
-				CFB278E34599438D8C21E688 /* Translation26 */,
-			);
-			name = Dejima26;
-			packageProductDependencies = (
-				BC734AAA31AB4E4AA0F03A02 /* Sparkle */,
-			);
-			productName = Dejima26;
-			productReference = 6B80123CC84D4D7515E3C005 /* Dejima26.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -158,10 +113,6 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					49610FE8883FDEB26CBF3268 = {
-						DevelopmentTeam = D56G7B2W2N;
-						ProvisioningStyle = Automatic;
-					};
-					F844F12557D0FD3BF9F622FC = {
 						DevelopmentTeam = D56G7B2W2N;
 						ProvisioningStyle = Automatic;
 					};
@@ -179,14 +130,15 @@
 			);
 			mainGroup = 2208951A8FAB67470FCA8B4B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7B02543CF2974CB4B150502D /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
-			packageReferences = (7B02543CF2974CB4B150502D /* XCRemoteSwiftPackageReference "Sparkle" */, );
 			productRefGroup = 675F5FECA2FD13B15F926B87 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				49610FE8883FDEB26CBF3268 /* Dejima */,
-				F844F12557D0FD3BF9F622FC /* Dejima26 */,
 			);
 		};
 /* End PBXProject section */
@@ -204,28 +156,9 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		9C9C52B2B64080AB9C765F4E /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1F0EE4DBC0D6D62EBA00ADDD /* AppIcon.icon in Resources */,
-				122ADCC96739872A46FABC4C /* Assets.xcassets in Resources */,
-				BC81F9F2ED2B74D5AC77050D /* InfoPlist.xcstrings in Resources */,
-				79CBC0F4A3EA1CBA6B65B71B /* Localizable.xcstrings in Resources */,
-				09285642844843A79C0F1702 /* ThirdPartyNotices.txt in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		9123D8ED6B0C161213BD968E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D20CE2F3FF4E9886FEC013B1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -234,15 +167,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		7B02543CF2974CB4B150502D /* XCRemoteSwiftPackageReference "Sparkle" */ = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/sparkle-project/Sparkle"; requirement = {kind = exactVersion; version = 2.10.0; }; };
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		BC734AAA31AB4E4AA0F03A01 /* Sparkle */ = {isa = XCSwiftPackageProductDependency; package = 7B02543CF2974CB4B150502D /* XCRemoteSwiftPackageReference "Sparkle" */; productName = Sparkle; };
-		BC734AAA31AB4E4AA0F03A02 /* Sparkle */ = {isa = XCSwiftPackageProductDependency; package = 7B02543CF2974CB4B150502D /* XCRemoteSwiftPackageReference "Sparkle" */; productName = Sparkle; };
-/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3D211F23B59F2604CE752320 /* Debug */ = {
@@ -298,34 +222,6 @@
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
-		};
-		5103AD4EC8B0DFC9159B3CDA /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Dejima.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = D56G7B2W2N;
-				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				LOCALIZED_STRING_CODE_COMMENTS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.nuki.Dejima;
-				PRODUCT_NAME = Dejima26;
-				SDKROOT = macosx;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_STRICT_CONCURRENCY = targeted;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
 		};
 		B3968B5127F88A77F49916DA /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -389,34 +285,6 @@
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
-		};
-		E32E1FAAD62444A7CBC04ED8 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Dejima.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = D56G7B2W2N;
-				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				LOCALIZED_STRING_CODE_COMMENTS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.nuki.Dejima;
-				PRODUCT_NAME = Dejima26;
-				SDKROOT = macosx;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_STRICT_CONCURRENCY = targeted;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
 		};
 		F1DF5F2CE7E2C104E2EE0E64 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -495,16 +363,26 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		F916AC790CCAA7D974B7AF73 /* Build configuration list for PBXNativeTarget "Dejima26" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				5103AD4EC8B0DFC9159B3CDA /* Debug */,
-				E32E1FAAD62444A7CBC04ED8 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7B02543CF2974CB4B150502D /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BC734AAA31AB4E4AA0F03A01 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7B02543CF2974CB4B150502D /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 50E0C13735A0F50B884DDF15 /* Project object */;
 }

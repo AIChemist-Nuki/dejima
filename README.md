@@ -18,7 +18,7 @@
 
 ### 1. 安装并授权
 
-打开下载的 DMG，选择与你的系统对应的文件夹：「macOS 15 到 25」或「macOS 26 或更新」。将 `Dejima.app` 拖到 Applications 后再启动。
+打开下载的 DMG，将 `Dejima.app` 拖到 Applications 后再启动。
 
 按应用引导打开系统设置的辅助功能列表，将 Dejima 拖入列表并开启权限。授权成功后，引导会继续到语言选择。
 
@@ -91,6 +91,6 @@ Dejima 得名于长崎的[出岛](https://nagasakidejima.jp/history/)。江户�
 
 ## 开发
 
-用 Xcode 直接打开 `Dejima.xcodeproj` 并配置签名。构建要求、两个版本的差异和打包步骤见[开发文档](docs/Development.md)（英文）。
+用 Xcode 直接打开 `Dejima.xcodeproj` 并配置签名。构建要求、不同 macOS 版本上的翻译实现和打包步骤见[开发文档](docs/Development.md)（英文）。
 
 MIT 许可证，见 [LICENSE](LICENSE)。
