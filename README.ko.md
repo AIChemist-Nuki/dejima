@@ -85,6 +85,6 @@ Dejima는 나가사키의 인공 섬 [데지마(出島)](https://nagasakidejima.
 
 ## 개발
 
-빌드 요구 사항, 두 버전의 차이, 릴리스 패키징 방법은 [개발 문서](docs/Development.md)(영어)를 참고하세요.
+Xcode에서 `Dejima.xcodeproj`를 열고 서명을 설정하세요. 빌드 요구 사항, 두 버전의 차이, 릴리스 패키징 방법은 [개발 문서](docs/Development.md)(영어)를 참고하세요.
 
 MIT 라이선스입니다. [LICENSE](LICENSE)를 참고하세요.

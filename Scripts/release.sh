@@ -4,9 +4,10 @@
 #
 #   ./Scripts/release.sh 0.3.0    tag HEAD as v0.3.0, then build it
 #   ./Scripts/release.sh          build the version HEAD is already tagged with
+#   ./Scripts/release.sh --local 0.3.0    verify packaging without creating a tag
 #
 # Uses the git tag for the version and the commit count for the build number.
-# Requires a clean working tree. Tags are created locally; push them separately:
+# Public release builds require a clean working tree. Tags are local; push separately:
 #
 #   git push origin main v0.3.0
 #
@@ -29,17 +30,39 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-if [ -n "$(git status --porcelain)" ]; then
-    echo "error: uncommitted changes. Commit or stash them first:" >&2
-    git status --short >&2
-    exit 1
+LOCAL_BUILD=0
+if [ "${1:-}" = "--local" ]; then
+    [ $# -eq 2 ] || { echo "usage: $0 --local VERSION" >&2; exit 1; }
+    LOCAL_BUILD=1
+    shift
 fi
+[ $# -le 1 ] || { echo "usage: $0 [VERSION | --local VERSION]" >&2; exit 1; }
 
 if [ $# -gt 0 ]; then
     VERSION="${1#v}"
     [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
         echo "error: '$1' is not a version like 0.3.0" >&2; exit 1
     }
+fi
+
+if [ "$LOCAL_BUILD" -eq 0 ] && [ -n "$(git status --porcelain)" ]; then
+    echo "error: uncommitted changes. Commit or stash them first:" >&2
+    git status --short >&2
+    exit 1
+fi
+
+# Fail before creating a tag if the native project or full Xcode is unavailable.
+[ -f Dejima.xcodeproj/project.pbxproj ] || {
+    echo "error: Dejima.xcodeproj is missing. Restore it from Git." >&2; exit 1
+}
+xcodebuild -version >/dev/null 2>&1 || {
+    echo "error: select a full Xcode installation using xcode-select or DEVELOPER_DIR" >&2; exit 1
+}
+
+if [ "$LOCAL_BUILD" -eq 1 ]; then
+    BUILD="$PWD/build/local"
+    DMG_SUFFIX="-local"
+elif [ $# -gt 0 ]; then
     if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
         echo "error: tag v$VERSION already exists" >&2
         exit 1
@@ -57,10 +80,13 @@ else
 fi
 BUILD_NUMBER=$(git rev-list --count HEAD)
 
-BUILD="$PWD/build/release"
+if [ "$LOCAL_BUILD" -eq 0 ]; then
+    BUILD="$PWD/build/release"
+    DMG_SUFFIX=""
+fi
 STAGE="$BUILD/dmg"
 DIST="$PWD/dist"
-DMG="$DIST/Dejima-$VERSION.dmg"
+DMG="$DIST/Dejima-$VERSION$DMG_SUFFIX.dmg"
 
 # The layout uses these names to position icons. Finder displays localized
 # names from the .localized directories created below.
@@ -68,8 +94,6 @@ FOLDER_NEW="macOS 26+.localized"
 FOLDER_OLD="macOS 15-25.localized"
 
 ICON="$PWD/Assets.xcassets/AppIcon.appiconset/icon_512.png"
-
-command -v xcodegen >/dev/null || { echo "error: xcodegen not installed (brew install xcodegen)" >&2; exit 1; }
 
 # Show command output only on failure.
 quiet() {
@@ -85,7 +109,6 @@ swift_tool() {
 echo "==> Dejima $VERSION ($BUILD_NUMBER)"
 rm -rf "$BUILD"
 mkdir -p "$STAGE" "$DIST"
-xcodegen generate >/dev/null
 
 # $1 scheme, $2 built product name, $3 folder inside the DMG
 build_one() {
@@ -96,13 +119,16 @@ build_one() {
         -project Dejima.xcodeproj
         -scheme "$scheme"
         -configuration Release
+        -destination 'generic/platform=macOS'
         -derivedDataPath "$BUILD/dd-$scheme"
-        # Allow Xcode to update signing assets when using automatic signing.
-        -allowProvisioningUpdates
+        ONLY_ACTIVE_ARCH=NO
         "MARKETING_VERSION=$VERSION"
         "CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
     )
-    if [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
+    if [ "$LOCAL_BUILD" -eq 1 ]; then
+        args+=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=
+            OTHER_CODE_SIGN_FLAGS=--timestamp=none CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO)
+    elif [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
         # Developer ID needs no provisioning profile for a non-sandboxed app
         # distributed outside the App Store, so manual signing is enough.
         args+=(CODE_SIGN_STYLE=Manual "CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY")
@@ -110,6 +136,9 @@ build_one() {
         # `archive` doesn't: a signature without a secure timestamp, and the
         # get-task-allow entitlement it injects so a debugger can attach.
         args+=(OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO)
+    else
+        # Allow Xcode to update signing assets only for automatic signing.
+        args+=(-allowProvisioningUpdates)
     fi
     xcodebuild "${args[@]}" build >"$BUILD/$scheme.log" 2>&1 || {
         echo "error: $scheme failed to build. Tail of $BUILD/$scheme.log:" >&2
@@ -125,7 +154,11 @@ build_one() {
     ln -s /Applications "$STAGE/$folder/Applications"
 
     codesign --verify --strict --deep "$STAGE/$folder/Dejima.app"
-    echo "    signed by: $(codesign -dvv "$STAGE/$folder/Dejima.app" 2>&1 | sed -n 's/^Authority=//p' | head -1)"
+    if [ "$LOCAL_BUILD" -eq 1 ]; then
+        echo "    signature: ad-hoc (local verification)"
+    else
+        echo "    signed by: $(codesign -dvv "$STAGE/$folder/Dejima.app" 2>&1 | sed -n 's/^Authority=//p' | head -1)"
+    fi
     echo "    version:   $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$STAGE/$folder/Dejima.app/Contents/Info.plist") ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$STAGE/$folder/Dejima.app/Contents/Info.plist"))"
     echo "    minimum:   $(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$STAGE/$folder/Dejima.app/Contents/Info.plist")"
 }
@@ -308,13 +341,19 @@ hdiutil detach "$MOUNT" >/dev/null 2>&1 || hdiutil detach "$MOUNT" -force >/dev/
 quiet diskutil image create from "$RW" --format UDZO "$DMG"
 rm -f "$RW"
 
-if [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
+if [ "$LOCAL_BUILD" -eq 1 ]; then
+    codesign --sign - --timestamp=none "$DMG"
+elif [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
     # Gatekeeper checks the DMG itself when it is opened, not only the apps in it.
     echo "==> Signing the DMG"
     codesign --sign "$CODE_SIGN_IDENTITY" --timestamp "$DMG"
 fi
 
-if [ -n "${NOTARY_PROFILE:-}" ]; then
+if [ "$LOCAL_BUILD" -eq 1 ]; then
+    echo
+    echo "Local verification only: ad-hoc signed, not notarized, and no tag created."
+    echo "Do not use this DMG for public distribution."
+elif [ -n "${NOTARY_PROFILE:-}" ]; then
     echo "==> Notarizing"
     xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
     xcrun stapler staple "$DMG"
