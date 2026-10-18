@@ -4,9 +4,10 @@
 #
 #   ./Scripts/release.sh 0.3.0    tag HEAD as v0.3.0, then build it
 #   ./Scripts/release.sh          build the version HEAD is already tagged with
+#   ./Scripts/release.sh --local 0.3.0    verify packaging without creating a tag
 #
 # Uses the git tag for the version and the commit count for the build number.
-# Requires a clean working tree. Tags are created locally; push them separately:
+# Public release builds require a clean working tree. Tags are local; push separately:
 #
 #   git push origin main v0.3.0
 #
@@ -29,17 +30,39 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-if [ -n "$(git status --porcelain)" ]; then
-    echo "error: uncommitted changes. Commit or stash them first:" >&2
-    git status --short >&2
-    exit 1
+LOCAL_BUILD=0
+if [ "${1:-}" = "--local" ]; then
+    [ $# -eq 2 ] || { echo "usage: $0 --local VERSION" >&2; exit 1; }
+    LOCAL_BUILD=1
+    shift
 fi
+[ $# -le 1 ] || { echo "usage: $0 [VERSION | --local VERSION]" >&2; exit 1; }
 
 if [ $# -gt 0 ]; then
     VERSION="${1#v}"
     [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
         echo "error: '$1' is not a version like 0.3.0" >&2; exit 1
     }
+fi
+
+if [ "$LOCAL_BUILD" -eq 0 ] && [ -n "$(git status --porcelain)" ]; then
+    echo "error: uncommitted changes. Commit or stash them first:" >&2
+    git status --short >&2
+    exit 1
+fi
+
+# Fail before creating a tag if the native project or full Xcode is unavailable.
+[ -f Dejima.xcodeproj/project.pbxproj ] || {
+    echo "error: Dejima.xcodeproj is missing. Restore it from Git." >&2; exit 1
+}
+xcodebuild -version >/dev/null 2>&1 || {
+    echo "error: select a full Xcode installation using xcode-select or DEVELOPER_DIR" >&2; exit 1
+}
+
+if [ "$LOCAL_BUILD" -eq 1 ]; then
+    BUILD="$PWD/build/local"
+    DMG_SUFFIX="-local"
+elif [ $# -gt 0 ]; then
     if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
         echo "error: tag v$VERSION already exists" >&2
         exit 1
@@ -57,10 +80,13 @@ else
 fi
 BUILD_NUMBER=$(git rev-list --count HEAD)
 
-BUILD="$PWD/build/release"
+if [ "$LOCAL_BUILD" -eq 0 ]; then
+    BUILD="$PWD/build/release"
+    DMG_SUFFIX=""
+fi
 STAGE="$BUILD/dmg"
 DIST="$PWD/dist"
-DMG="$DIST/Dejima-$VERSION.dmg"
+DMG="$DIST/Dejima-$VERSION$DMG_SUFFIX.dmg"
 
 # The layout uses these names to position icons. Finder displays localized
 # names from the .localized directories created below.
@@ -68,8 +94,6 @@ FOLDER_NEW="macOS 26+.localized"
 FOLDER_OLD="macOS 15-25.localized"
 
 ICON="$PWD/Assets.xcassets/AppIcon.appiconset/icon_512.png"
-
-command -v xcodegen >/dev/null || { echo "error: xcodegen not installed (brew install xcodegen)" >&2; exit 1; }
 
 # Show command output only on failure.
 quiet() {
@@ -85,7 +109,6 @@ swift_tool() {
 echo "==> Dejima $VERSION ($BUILD_NUMBER)"
 rm -rf "$BUILD"
 mkdir -p "$STAGE" "$DIST"
-xcodegen generate >/dev/null
 
 # $1 scheme, $2 built product name, $3 folder inside the DMG
 build_one() {
@@ -96,13 +119,16 @@ build_one() {
         -project Dejima.xcodeproj
         -scheme "$scheme"
         -configuration Release
+        -destination 'generic/platform=macOS'
         -derivedDataPath "$BUILD/dd-$scheme"
-        # Allow Xcode to update signing assets when using automatic signing.
-        -allowProvisioningUpdates
+        ONLY_ACTIVE_ARCH=NO
         "MARKETING_VERSION=$VERSION"
         "CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
     )
-    if [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
+    if [ "$LOCAL_BUILD" -eq 1 ]; then
+        args+=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=
+            OTHER_CODE_SIGN_FLAGS=--timestamp=none CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO)
+    elif [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
         # Developer ID needs no provisioning profile for a non-sandboxed app
         # distributed outside the App Store, so manual signing is enough.
         args+=(CODE_SIGN_STYLE=Manual "CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY")
@@ -110,6 +136,9 @@ build_one() {
         # `archive` doesn't: a signature without a secure timestamp, and the
         # get-task-allow entitlement it injects so a debugger can attach.
         args+=(OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO)
+    else
+        # Allow Xcode to update signing assets only for automatic signing.
+        args+=(-allowProvisioningUpdates)
     fi
     xcodebuild "${args[@]}" build >"$BUILD/$scheme.log" 2>&1 || {
         echo "error: $scheme failed to build. Tail of $BUILD/$scheme.log:" >&2
@@ -125,7 +154,11 @@ build_one() {
     ln -s /Applications "$STAGE/$folder/Applications"
 
     codesign --verify --strict --deep "$STAGE/$folder/Dejima.app"
-    echo "    signed by: $(codesign -dvv "$STAGE/$folder/Dejima.app" 2>&1 | sed -n 's/^Authority=//p' | head -1)"
+    if [ "$LOCAL_BUILD" -eq 1 ]; then
+        echo "    signature: ad-hoc (local verification)"
+    else
+        echo "    signed by: $(codesign -dvv "$STAGE/$folder/Dejima.app" 2>&1 | sed -n 's/^Authority=//p' | head -1)"
+    fi
     echo "    version:   $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$STAGE/$folder/Dejima.app/Contents/Info.plist") ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$STAGE/$folder/Dejima.app/Contents/Info.plist"))"
     echo "    minimum:   $(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$STAGE/$folder/Dejima.app/Contents/Info.plist")"
 }
@@ -179,10 +212,17 @@ https://github.com/AIChemist-Nuki/dejima
 
 打开对应的文件夹，把 Dejima.app 拖到旁边的 Applications 上。
 
+首次使用
+1. 从“应用程序”打开 Dejima，按引导授予辅助功能权限。
+2. 选择两种常用的翻译语言。若提示缺少语言，点“下载语言”，
+   在系统窗口中确认下载；准备完成后点“开始使用”。
+   已有可用模型时，无需另行下载。
+3. 在支持复制文字的应用中选中文字，快速连按两次 ⌘C，查看译文。
+
 遇到问题
 · 打开时提示需要更新的 macOS：改装「macOS 15 到 25」文件夹里的版本。
 · 连按两下 ⌘C 没反应：菜单栏图标 → 授予辅助功能权限…
-· 提示语言模型没下载：菜单栏图标 → 查看语言模型…
+· 提示缺少翻译语言：菜单栏图标 → 翻译语言设置，查看或下载所需语言。
 
 翻译全程在本地完成，不经过任何服务器。
 
@@ -201,10 +241,19 @@ Not sure which macOS you have: click ${APPLE_LOGO} in the top-left corner of the
 
 Open the matching folder, drag Dejima.app onto the Applications alias beside it.
 
+First launch
+1. Open Dejima from Applications and follow the guide to grant Accessibility access.
+2. Choose your two usual translation languages. If languages are missing, click
+   “Download languages” and confirm the download in the system dialog. Once ready,
+   click “Get started”. No extra download is needed if usable models are available.
+3. Select text in an app that supports copying, then quickly press ⌘C twice
+   to see the translation.
+
 If something goes wrong
 · Says it needs a newer macOS: install the one in the “macOS 15 to 25” folder.
 · Pressing ⌘C twice does nothing: menu bar icon → Grant Accessibility access…
-· Says a language model isn't downloaded: menu bar icon → Check language models…
+· Missing translation languages: menu bar icon → Translation language settings.
+  Check or download the languages you need there.
 
 Translation happens entirely on device. Nothing you translate reaches a server.
 
@@ -222,10 +271,18 @@ macOS のバージョンがわからない場合: 画面左上の ${APPLE_LOGO} 
 
 対応するフォルダを開き、Dejima.app を隣の Applications にドラッグします。
 
+初めて使うとき
+1. 「アプリケーション」から Dejima を開き、案内に従ってアクセシビリティ権限を許可します。
+2. よく使う翻訳言語を2つ選びます。言語が不足している場合は「言語をダウンロード」を押し、
+   システムのダイアログでダウンロードを確認します。準備ができたら「使い始める」を押します。
+   利用可能なモデルがある場合は、追加のダウンロードは不要です。
+3. テキストをコピーできるアプリで文章を選び、⌘C をすばやく2回押すと訳文が表示されます。
+
 困ったときは
 ・新しい macOS が必要と表示される: 「macOS 15〜25」フォルダの方を入れてください。
 ・⌘C を2回押しても反応しない: メニューバーアイコン → アクセシビリティ権限を与える…
-・言語モデルがないと表示される: メニューバーアイコン → 言語モデルを確認…
+・翻訳言語が不足していると表示される: メニューバーアイコン → 翻訳言語の設定。
+  必要な言語を確認、ダウンロードできます。
 
 翻訳はすべて端末内で完結します。サーバーには何も送りません。
 
@@ -243,10 +300,18 @@ macOS 버전을 모르겠다면: 화면 왼쪽 위의 ${APPLE_LOGO} → 이 Mac�
 
 맞는 폴더를 열고 Dejima.app을 옆에 있는 Applications로 드래그하세요.
 
+처음 사용할 때
+1. 응용 프로그램에서 Dejima를 열고 안내에 따라 손쉬운 사용 권한을 허용하세요.
+2. 자주 사용하는 번역 언어 두 개를 선택하세요. 언어가 없다는 안내가 나오면
+   ‘언어 다운로드’를 누르고 시스템 대화상자에서 다운로드를 확인하세요.
+   준비가 끝나면 ‘시작하기’를 누르세요. 사용 가능한 모델이 있으면 추가 다운로드는 필요 없습니다.
+3. 텍스트 복사를 지원하는 앱에서 글을 선택하고 ⌘C를 빠르게 두 번 눌러 번역을 확인하세요.
+
 문제가 생겼을 때
 · 더 새로운 macOS가 필요하다고 나오면: ‘macOS 15~25’ 폴더의 빌드를 설치하세요.
 · ⌘C를 두 번 눌러도 반응이 없으면: 메뉴 막대 아이콘 → 손쉬운 사용 권한 부여…
-· 언어 모델이 없다고 나오면: 메뉴 막대 아이콘 → 언어 모델 확인…
+· 번역 언어가 없다고 나오면: 메뉴 막대 아이콘 → 번역 언어 설정에서
+  필요한 언어를 확인하거나 다운로드하세요.
 
 번역은 모두 기기 안에서 이루어집니다. 번역한 내용은 어떤 서버로도 전송되지 않습니다.
 EOF
@@ -276,13 +341,19 @@ hdiutil detach "$MOUNT" >/dev/null 2>&1 || hdiutil detach "$MOUNT" -force >/dev/
 quiet diskutil image create from "$RW" --format UDZO "$DMG"
 rm -f "$RW"
 
-if [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
+if [ "$LOCAL_BUILD" -eq 1 ]; then
+    codesign --sign - --timestamp=none "$DMG"
+elif [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
     # Gatekeeper checks the DMG itself when it is opened, not only the apps in it.
     echo "==> Signing the DMG"
     codesign --sign "$CODE_SIGN_IDENTITY" --timestamp "$DMG"
 fi
 
-if [ -n "${NOTARY_PROFILE:-}" ]; then
+if [ "$LOCAL_BUILD" -eq 1 ]; then
+    echo
+    echo "Local verification only: ad-hoc signed, not notarized, and no tag created."
+    echo "Do not use this DMG for public distribution."
+elif [ -n "${NOTARY_PROFILE:-}" ]; then
     echo "==> Notarizing"
     xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
     xcrun stapler staple "$DMG"
