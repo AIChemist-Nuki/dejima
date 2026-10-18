@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# Builds both targets and packages them into one DMG.
+# Builds both targets, a combined DMG, and signed Sparkle update archives.
 #
 #   ./Scripts/release.sh 0.3.0    tag HEAD as v0.3.0, then build it
 #   ./Scripts/release.sh          build the version HEAD is already tagged with
 #   ./Scripts/release.sh --local 0.3.0    verify packaging without creating a tag
 #
-# Uses the git tag for the version and the commit count for the build number.
+# Uses the release version for both CFBundleShortVersionString and CFBundleVersion.
 # Public release builds require a clean working tree. Tags are local; push separately:
 #
 #   git push origin main v0.3.0
@@ -14,12 +14,15 @@
 # Each macOS build is packaged as Dejima.app in its own folder.
 # Scripts/dmg-window.swift generates the backgrounds and Finder layouts.
 #
-# Public distribution requires Developer ID signing and notarization.
-# Otherwise the script uses the project's signing settings:
+# Public distribution requires Developer ID signing, notarization, and an
+# existing Sparkle signing key in the login Keychain:
 #
 #   CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 #   NOTARY_PROFILE=dejima \
 #   ./Scripts/release.sh
+#
+# A single installed Developer ID identity is selected automatically.
+# SPARKLE_KEY_ACCOUNT defaults to com.nuki.Dejima.
 #
 # Store notarization credentials before publishing:
 #
@@ -59,6 +62,7 @@ xcodebuild -version >/dev/null 2>&1 || {
     echo "error: select a full Xcode installation using xcode-select or DEVELOPER_DIR" >&2; exit 1
 }
 
+CREATE_TAG=0
 if [ "$LOCAL_BUILD" -eq 1 ]; then
     BUILD="$PWD/build/local"
     DMG_SUFFIX="-local"
@@ -67,8 +71,7 @@ elif [ $# -gt 0 ]; then
         echo "error: tag v$VERSION already exists" >&2
         exit 1
     fi
-    git tag "v$VERSION"
-    echo "==> Tagged HEAD as v$VERSION"
+    CREATE_TAG=1
 else
     TAG=$(git tag --points-at HEAD --list 'v[0-9]*' | sort -V | tail -1)
     [ -n "$TAG" ] || {
@@ -78,7 +81,9 @@ else
     }
     VERSION="${TAG#v}"
 fi
-BUILD_NUMBER=$(git rev-list --count HEAD)
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+    echo "error: '$VERSION' is not a version like 0.3.0" >&2; exit 1
+}
 
 if [ "$LOCAL_BUILD" -eq 0 ]; then
     BUILD="$PWD/build/release"
@@ -86,7 +91,36 @@ if [ "$LOCAL_BUILD" -eq 0 ]; then
 fi
 STAGE="$BUILD/dmg"
 DIST="$PWD/dist"
-DMG="$DIST/Dejima-$VERSION$DMG_SUFFIX.dmg"
+DMG="$BUILD/Dejima-$VERSION$DMG_SUFFIX.dmg"
+SOURCE_PACKAGES="$PWD/build/SourcePackages"
+SPARKLE_BIN="$SOURCE_PACKAGES/artifacts/sparkle/Sparkle/bin"
+SPARKLE_KEY_ACCOUNT="${SPARKLE_KEY_ACCOUNT:-com.nuki.Dejima}"
+RELEASE_URL="https://github.com/AIChemist-Nuki/dejima/releases/download/v$VERSION"
+
+if [ "$LOCAL_BUILD" -eq 0 ]; then
+    [ -n "${NOTARY_PROFILE:-}" ] || {
+        echo "error: NOTARY_PROFILE is required for public release packaging" >&2; exit 1
+    }
+    identities=$(security find-identity -v -p codesigning | sed -nE \
+        's/^[[:space:]]*[0-9]+\) ([[:xdigit:]]{40}) "(Developer ID Application:.*)"$/\1\t\2/p' | sort -u)
+    matching_identities=()
+    while IFS=$'\t' read -r identity_hash identity_name; do
+        [ -n "$identity_hash" ] || continue
+        if [ -z "${CODE_SIGN_IDENTITY:-}" ] || [ "$CODE_SIGN_IDENTITY" = "$identity_hash" ] || [ "$CODE_SIGN_IDENTITY" = "$identity_name" ]; then
+            matching_identities+=("$identity_hash"$'\t'"$identity_name")
+        fi
+    done <<< "$identities"
+    [ "${#matching_identities[@]}" -eq 1 ] || {
+        echo "error: choose one valid Developer ID Application identity with CODE_SIGN_IDENTITY" >&2
+        echo "       Found ${#matching_identities[@]} matching identities with private keys." >&2
+        exit 1
+    }
+    IFS=$'\t' read -r CODE_SIGN_IDENTITY SIGNING_NAME <<< "${matching_identities[0]}"
+    SIGNING_TEAM=$(printf '%s\n' "$SIGNING_NAME" | sed -nE 's/.*\(([A-Z0-9]{10})\)$/\1/p')
+    [ -n "$SIGNING_TEAM" ] || { echo "error: cannot determine the Developer ID team" >&2; exit 1; }
+    echo "==> Validating notarization credentials"
+    xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" --output-format json >/dev/null
+fi
 
 # The layout uses these names to position icons. Finder displays localized
 # names from the .localized directories created below.
@@ -106,9 +140,50 @@ swift_tool() {
     quiet swift -module-cache-path "$BUILD/module-cache" "$@"
 }
 
-echo "==> Dejima $VERSION ($BUILD_NUMBER)"
+echo "==> Dejima $VERSION"
 rm -rf "$BUILD"
 mkdir -p "$STAGE" "$DIST"
+
+echo "==> Resolving Sparkle"
+quiet xcodebuild -resolvePackageDependencies -project Dejima.xcodeproj \
+    -clonedSourcePackagesDirPath "$SOURCE_PACKAGES" -onlyUsePackageVersionsFromResolvedFile
+[ -x "$SPARKLE_BIN/generate_appcast" ] || {
+    echo "error: Sparkle tools are missing from the resolved package" >&2; exit 1
+}
+
+if [ "$LOCAL_BUILD" -eq 0 ]; then
+    public_key=$("$SPARKLE_BIN/generate_keys" --account "$SPARKLE_KEY_ACCOUNT" -p) || {
+        echo "error: configure the existing Sparkle signing key for account $SPARKLE_KEY_ACCOUNT" >&2; exit 1
+    }
+    expected_key=$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' Info.plist)
+    [ -n "$public_key" ] && [ "$public_key" = "$expected_key" ] || {
+        echo "error: the Sparkle signing key does not match SUPublicEDKey in Info.plist" >&2; exit 1
+    }
+    for setting in SURequireSignedFeed SUVerifyUpdateBeforeExtraction; do
+        [ "$(/usr/libexec/PlistBuddy -c "Print :$setting" Info.plist)" = true ] || {
+            echo "error: $setting must be enabled for public updates" >&2; exit 1
+        }
+    done
+    [ -z "$(git status --porcelain)" ] || {
+        echo "error: package resolution changed tracked files; commit them before tagging" >&2; exit 1
+    }
+    if [ "$CREATE_TAG" -eq 1 ]; then
+        git tag "v$VERSION"
+        echo "==> Tagged HEAD as v$VERSION"
+    fi
+
+    cat > "$BUILD/ExportOptions.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+    <key>method</key><string>developer-id</string>
+    <key>destination</key><string>export</string>
+    <key>signingStyle</key><string>manual</string>
+    <key>signingCertificate</key><string>$CODE_SIGN_IDENTITY</string>
+    <key>teamID</key><string>$SIGNING_TEAM</string>
+</dict></plist>
+EOF
+fi
 
 # $1 scheme, $2 built product name, $3 folder inside the DMG
 build_one() {
@@ -121,32 +196,36 @@ build_one() {
         -configuration Release
         -destination 'generic/platform=macOS'
         -derivedDataPath "$BUILD/dd-$scheme"
+        -clonedSourcePackagesDirPath "$SOURCE_PACKAGES"
+        -disableAutomaticPackageResolution
         ONLY_ACTIVE_ARCH=NO
         "MARKETING_VERSION=$VERSION"
-        "CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
+        "CURRENT_PROJECT_VERSION=$VERSION"
     )
     if [ "$LOCAL_BUILD" -eq 1 ]; then
         args+=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=
-            OTHER_CODE_SIGN_FLAGS=--timestamp=none CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO)
-    elif [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
-        # Developer ID needs no provisioning profile for a non-sandboxed app
-        # distributed outside the App Store, so manual signing is enough.
-        args+=(CODE_SIGN_STYLE=Manual "CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY")
-        # Notarization rejects what `xcodebuild build` does by default but
-        # `archive` doesn't: a signature without a secure timestamp, and the
-        # get-task-allow entitlement it injects so a debugger can attach.
-        args+=(OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO)
+            OTHER_CODE_SIGN_FLAGS=--timestamp=none CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO
+            ENABLE_HARDENED_RUNTIME=NO)
     else
-        # Allow Xcode to update signing assets only for automatic signing.
-        args+=(-allowProvisioningUpdates)
+        args+=(CODE_SIGN_STYLE=Manual "CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY"
+            "DEVELOPMENT_TEAM=$SIGNING_TEAM" OTHER_CODE_SIGN_FLAGS=--timestamp
+            CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO ENABLE_HARDENED_RUNTIME=YES
+            -archivePath "$BUILD/$scheme.xcarchive")
     fi
-    xcodebuild "${args[@]}" build >"$BUILD/$scheme.log" 2>&1 || {
+    local action=archive
+    [ "$LOCAL_BUILD" -eq 0 ] || action=build
+    xcodebuild "${args[@]}" "$action" >"$BUILD/$scheme.log" 2>&1 || {
         echo "error: $scheme failed to build. Tail of $BUILD/$scheme.log:" >&2
         tail -30 "$BUILD/$scheme.log" >&2
         exit 1
     }
 
     local app="$BUILD/dd-$scheme/Build/Products/Release/$product.app"
+    if [ "$LOCAL_BUILD" -eq 0 ]; then
+        quiet xcodebuild -exportArchive -archivePath "$BUILD/$scheme.xcarchive" \
+            -exportPath "$BUILD/export-$scheme" -exportOptionsPlist "$BUILD/ExportOptions.plist"
+        app="$BUILD/export-$scheme/$product.app"
+    fi
     [ -d "$app" ] || { echo "error: $app missing after a successful build" >&2; exit 1; }
 
     mkdir -p "$STAGE/$folder"
@@ -157,7 +236,15 @@ build_one() {
     if [ "$LOCAL_BUILD" -eq 1 ]; then
         echo "    signature: ad-hoc (local verification)"
     else
-        echo "    signed by: $(codesign -dvv "$STAGE/$folder/Dejima.app" 2>&1 | sed -n 's/^Authority=//p' | head -1)"
+        local signing_details
+        signing_details=$(codesign -dvv "$STAGE/$folder/Dejima.app" 2>&1)
+        printf '%s\n' "$signing_details" | grep -Fqx "Authority=$SIGNING_NAME" || {
+            echo "error: $scheme was not signed with the selected Developer ID identity" >&2; exit 1
+        }
+        printf '%s\n' "$signing_details" | grep -q 'flags=.*runtime' || {
+            echo "error: $scheme is missing hardened runtime" >&2; exit 1
+        }
+        echo "    signed by: $SIGNING_NAME"
     fi
     echo "    version:   $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$STAGE/$folder/Dejima.app/Contents/Info.plist") ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$STAGE/$folder/Dejima.app/Contents/Info.plist"))"
     echo "    minimum:   $(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$STAGE/$folder/Dejima.app/Contents/Info.plist")"
@@ -224,6 +311,11 @@ https://github.com/AIChemist-Nuki/dejima
 · 连按两下 ⌘C 没反应：菜单栏图标 → 授予辅助功能权限…
 · 提示缺少翻译语言：菜单栏图标 → 翻译语言设置，查看或下载所需语言。
 
+更新
+菜单栏图标 → 检查更新。按提示下载，确认安装后 Dejima 会退出、替换应用并重新启动。
+“自动检查更新”默认关闭；开启后每天后台检查，安装仍需确认。原有开关设置会保留。
+旧版需先手动安装一次支持应用内更新的版本，之后即可在应用中更新。
+
 翻译全程在本地完成，不经过任何服务器。
 
 
@@ -255,6 +347,11 @@ If something goes wrong
 · Missing translation languages: menu bar icon → Translation language settings.
   Check or download the languages you need there.
 
+Updates
+Menu bar icon → Check for updates. Follow the prompts to download. After you confirm installation, Dejima quits, replaces the app, and relaunches.
+Automatic checks are off by default. Enable them for daily background checks; installation still needs confirmation. Your existing preference is preserved.
+Older versions need one manual installation of an in-app-update-enabled release. Later updates can be installed from the app.
+
 Translation happens entirely on device. Nothing you translate reaches a server.
 
 
@@ -283,6 +380,11 @@ macOS のバージョンがわからない場合: 画面左上の ${APPLE_LOGO} 
 ・⌘C を2回押しても反応しない: メニューバーアイコン → アクセシビリティ権限を与える…
 ・翻訳言語が不足していると表示される: メニューバーアイコン → 翻訳言語の設定。
   必要な言語を確認、ダウンロードできます。
+
+アップデート
+メニューバーアイコン → アップデートを確認。案内に従ってダウンロードし、インストールを承認すると、Dejima が終了してアプリを置き換え、再起動します。
+自動確認は初期設定ではオフです。オンにすると毎日バックグラウンドで確認しますが、インストールには承認が必要です。既存の設定は引き継がれます。
+旧バージョンでは、アプリ内更新に対応したバージョンを一度手動でインストールしてください。以後はアプリ内から更新できます。
 
 翻訳はすべて端末内で完結します。サーバーには何も送りません。
 
@@ -313,6 +415,11 @@ macOS 버전을 모르겠다면: 화면 왼쪽 위의 ${APPLE_LOGO} → 이 Mac�
 · 번역 언어가 없다고 나오면: 메뉴 막대 아이콘 → 번역 언어 설정에서
   필요한 언어를 확인하거나 다운로드하세요.
 
+업데이트
+메뉴 막대 아이콘 → 업데이트 확인. 안내에 따라 내려받고 설치를 확인하면 Dejima가 종료된 뒤 앱을 교체하고 다시 실행됩니다.
+자동 확인은 기본값이 꺼짐입니다. 켜면 매일 백그라운드에서 확인하며, 설치에는 확인이 필요합니다. 기존 설정은 유지됩니다.
+이전 버전은 앱 내 업데이트를 지원하는 버전을 한 번 수동으로 설치해야 합니다. 이후에는 앱에서 업데이트할 수 있습니다.
+
 번역은 모두 기기 안에서 이루어집니다. 번역한 내용은 어떤 서버로도 전송되지 않습니다.
 EOF
 
@@ -326,6 +433,13 @@ SIZE=$(( $(du -sm "$STAGE" | cut -f1) * 3 / 2 + 50 ))
 quiet diskutil image create blank --size "${SIZE}m" --volumeName "Dejima $VERSION" "$RW"
 
 # Use the default volume mount location for Finder's background alias records.
+MOUNT=""
+cleanup_mount() {
+    if [ -n "$MOUNT" ]; then
+        hdiutil detach "$MOUNT" >/dev/null 2>&1 || hdiutil detach "$MOUNT" -force >/dev/null 2>&1 || true
+    fi
+}
+trap cleanup_mount EXIT
 MOUNT=$(hdiutil attach "$RW" -nobrowse -noverify -noautoopen | sed -n 's|.*\(/Volumes/.*\)$|\1|p' | head -1)
 [ -n "$MOUNT" ] || { echo "error: could not tell where $RW mounted" >&2; exit 1; }
 
@@ -338,34 +452,74 @@ swift_tool Scripts/dmg-window.swift layout "$MOUNT" "$FOLDER_NEW" "$FOLDER_OLD" 
 sync
 
 hdiutil detach "$MOUNT" >/dev/null 2>&1 || hdiutil detach "$MOUNT" -force >/dev/null
+MOUNT=""
 quiet diskutil image create from "$RW" --format UDZO "$DMG"
 rm -f "$RW"
 
 if [ "$LOCAL_BUILD" -eq 1 ]; then
     codesign --sign - --timestamp=none "$DMG"
-elif [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
-    # Gatekeeper checks the DMG itself when it is opened, not only the apps in it.
+else
     echo "==> Signing the DMG"
     codesign --sign "$CODE_SIGN_IDENTITY" --timestamp "$DMG"
-fi
-
-if [ "$LOCAL_BUILD" -eq 1 ]; then
-    echo
-    echo "Local verification only: ad-hoc signed, not notarized, and no tag created."
-    echo "Do not use this DMG for public distribution."
-elif [ -n "${NOTARY_PROFILE:-}" ]; then
     echo "==> Notarizing"
     xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
     xcrun stapler staple "$DMG"
+    xcrun stapler validate "$DMG"
+    codesign --verify --strict "$DMG"
     echo "==> Gatekeeper check"
     spctl -a -t open --context context:primary-signature -v "$DMG"
-else
+
+    # The submitted DMG contains these exact signed app bundles.
+    for folder in "$FOLDER_OLD" "$FOLDER_NEW"; do
+        xcrun stapler staple "$STAGE/$folder/Dejima.app"
+        xcrun stapler validate "$STAGE/$folder/Dejima.app"
+        codesign --verify --strict --deep "$STAGE/$folder/Dejima.app"
+        spctl -a -t exec -v "$STAGE/$folder/Dejima.app"
+    done
+fi
+
+artifacts=("$DMG")
+
+# $1 minimum macOS major version, $2 folder inside the DMG.
+package_update() {
+    local minimum="$1" folder="$2"
+    local updates="$BUILD/updates/macos$minimum"
+    local archive="$updates/Dejima-$VERSION-macos$minimum$DMG_SUFFIX.zip"
+    local appcast="$updates/appcast-macos$minimum.xml"
+    mkdir -p "$updates"
+    echo "==> Packaging the macOS $minimum update"
+    quiet ditto -c -k --sequesterRsrc --keepParent "$STAGE/$folder/Dejima.app" "$archive"
+    artifacts+=("$archive")
+
+    if [ "$LOCAL_BUILD" -eq 0 ]; then
+        quiet "$SPARKLE_BIN/generate_appcast" --account "$SPARKLE_KEY_ACCOUNT" \
+            --download-url-prefix "$RELEASE_URL/" --maximum-deltas 0 \
+            --link "https://github.com/AIChemist-Nuki/dejima/releases/tag/v$VERSION" \
+            -o "$appcast" "$updates"
+        quiet "$SPARKLE_BIN/sign_update" --account "$SPARKLE_KEY_ACCOUNT" --verify "$appcast"
+        local signature
+        signature=$(xmllint --xpath 'string(/rss/channel/item/enclosure/@*[local-name()="edSignature"])' "$appcast")
+        [ -n "$signature" ] || { echo "error: the update archive has no EdDSA signature" >&2; exit 1; }
+        quiet "$SPARKLE_BIN/sign_update" --account "$SPARKLE_KEY_ACCOUNT" --verify "$archive" "$signature"
+        artifacts+=("$appcast")
+    fi
+}
+
+package_update 15 "$FOLDER_OLD"
+package_update 26 "$FOLDER_NEW"
+
+for artifact in "${artifacts[@]}"; do
+    mv -f "$artifact" "$DIST/"
+done
+
+if [ "$LOCAL_BUILD" -eq 1 ]; then
     echo
-    echo "NOT notarized. This DMG will open on your own machine and be blocked"
-    echo "on everyone else's. See the header of this script for how to sign with"
-    echo "a Developer ID certificate and notarize."
+    echo "Local verification only: ad-hoc signed, hardened runtime disabled, and not notarized."
+    echo "No tag or public update feed was created. Do not publish these local packages."
 fi
 
 echo
-echo "==> $DMG"
-ls -lh "$DMG" | awk '{print "    " $5}'
+echo "==> Verified packages"
+for artifact in "${artifacts[@]}"; do
+    echo "    $DIST/${artifact##*/}"
+done
