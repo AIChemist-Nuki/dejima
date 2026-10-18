@@ -179,10 +179,17 @@ https://github.com/AIChemist-Nuki/dejima
 
 打开对应的文件夹，把 Dejima.app 拖到旁边的 Applications 上。
 
+首次使用
+1. 从“应用程序”打开 Dejima，按引导授予辅助功能权限。
+2. 选择两种常用的翻译语言。若提示缺少语言，点“下载语言”，
+   在系统窗口中确认下载；准备完成后点“开始使用”。
+   已有可用模型时，无需另行下载。
+3. 在支持复制文字的应用中选中文字，快速连按两次 ⌘C，查看译文。
+
 遇到问题
 · 打开时提示需要更新的 macOS：改装「macOS 15 到 25」文件夹里的版本。
 · 连按两下 ⌘C 没反应：菜单栏图标 → 授予辅助功能权限…
-· 提示语言模型没下载：菜单栏图标 → 查看语言模型…
+· 提示缺少翻译语言：菜单栏图标 → 翻译语言设置，查看或下载所需语言。
 
 翻译全程在本地完成，不经过任何服务器。
 
@@ -201,10 +208,19 @@ Not sure which macOS you have: click ${APPLE_LOGO} in the top-left corner of the
 
 Open the matching folder, drag Dejima.app onto the Applications alias beside it.
 
+First launch
+1. Open Dejima from Applications and follow the guide to grant Accessibility access.
+2. Choose your two usual translation languages. If languages are missing, click
+   “Download languages” and confirm the download in the system dialog. Once ready,
+   click “Get started”. No extra download is needed if usable models are available.
+3. Select text in an app that supports copying, then quickly press ⌘C twice
+   to see the translation.
+
 If something goes wrong
 · Says it needs a newer macOS: install the one in the “macOS 15 to 25” folder.
 · Pressing ⌘C twice does nothing: menu bar icon → Grant Accessibility access…
-· Says a language model isn't downloaded: menu bar icon → Check language models…
+· Missing translation languages: menu bar icon → Translation language settings.
+  Check or download the languages you need there.
 
 Translation happens entirely on device. Nothing you translate reaches a server.
 
@@ -222,10 +238,18 @@ macOS のバージョンがわからない場合: 画面左上の ${APPLE_LOGO} 
 
 対応するフォルダを開き、Dejima.app を隣の Applications にドラッグします。
 
+初めて使うとき
+1. 「アプリケーション」から Dejima を開き、案内に従ってアクセシビリティ権限を許可します。
+2. よく使う翻訳言語を2つ選びます。言語が不足している場合は「言語をダウンロード」を押し、
+   システムのダイアログでダウンロードを確認します。準備ができたら「使い始める」を押します。
+   利用可能なモデルがある場合は、追加のダウンロードは不要です。
+3. テキストをコピーできるアプリで文章を選び、⌘C をすばやく2回押すと訳文が表示されます。
+
 困ったときは
 ・新しい macOS が必要と表示される: 「macOS 15〜25」フォルダの方を入れてください。
 ・⌘C を2回押しても反応しない: メニューバーアイコン → アクセシビリティ権限を与える…
-・言語モデルがないと表示される: メニューバーアイコン → 言語モデルを確認…
+・翻訳言語が不足していると表示される: メニューバーアイコン → 翻訳言語の設定。
+  必要な言語を確認、ダウンロードできます。
 
 翻訳はすべて端末内で完結します。サーバーには何も送りません。
 
@@ -243,10 +267,18 @@ macOS 버전을 모르겠다면: 화면 왼쪽 위의 ${APPLE_LOGO} → 이 Mac�
 
 맞는 폴더를 열고 Dejima.app을 옆에 있는 Applications로 드래그하세요.
 
+처음 사용할 때
+1. 응용 프로그램에서 Dejima를 열고 안내에 따라 손쉬운 사용 권한을 허용하세요.
+2. 자주 사용하는 번역 언어 두 개를 선택하세요. 언어가 없다는 안내가 나오면
+   ‘언어 다운로드’를 누르고 시스템 대화상자에서 다운로드를 확인하세요.
+   준비가 끝나면 ‘시작하기’를 누르세요. 사용 가능한 모델이 있으면 추가 다운로드는 필요 없습니다.
+3. 텍스트 복사를 지원하는 앱에서 글을 선택하고 ⌘C를 빠르게 두 번 눌러 번역을 확인하세요.
+
 문제가 생겼을 때
 · 더 새로운 macOS가 필요하다고 나오면: ‘macOS 15~25’ 폴더의 빌드를 설치하세요.
 · ⌘C를 두 번 눌러도 반응이 없으면: 메뉴 막대 아이콘 → 손쉬운 사용 권한 부여…
-· 언어 모델이 없다고 나오면: 메뉴 막대 아이콘 → 언어 모델 확인…
+· 번역 언어가 없다고 나오면: 메뉴 막대 아이콘 → 번역 언어 설정에서
+  필요한 언어를 확인하거나 다운로드하세요.
 
 번역은 모두 기기 안에서 이루어집니다. 번역한 내용은 어떤 서버로도 전송되지 않습니다.
 EOF
