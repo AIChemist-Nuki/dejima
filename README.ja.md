@@ -85,6 +85,6 @@ Dejima の名前は、長崎の人工島[「出島」](https://nagasakidejima.jp
 
 ## 開発
 
-ビルドに必要な環境、2つのバージョンの違い、配布用パッケージの作成方法は [Development](docs/Development.md)（英語）を参照してください。
+Xcode で `Dejima.xcodeproj` を開き、署名を設定してください。ビルドに必要な環境、2つのバージョンの違い、配布用パッケージの作成方法は [Development](docs/Development.md)（英語）を参照してください。
 
 MIT ライセンスです。[LICENSE](LICENSE) を参照してください。

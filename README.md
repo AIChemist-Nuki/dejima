@@ -85,6 +85,6 @@ Dejima 得名于长崎的[出岛](https://nagasakidejima.jp/history/)。江户�
 
 ## 开发
 
-构建要求、两个版本的差异和打包步骤见[开发文档](docs/Development.md)（英文）。
+用 Xcode 直接打开 `Dejima.xcodeproj` 并配置签名。构建要求、两个版本的差异和打包步骤见[开发文档](docs/Development.md)（英文）。
 
 MIT 许可证，见 [LICENSE](LICENSE)。

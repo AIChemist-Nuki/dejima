@@ -85,6 +85,6 @@ Dejima is named after the [artificial island in Nagasaki](https://nagasakidejima
 
 ## Development
 
-See [Development](docs/Development.md) for build requirements, differences between the two versions, and release packaging.
+Open `Dejima.xcodeproj` in Xcode and configure signing. See [Development](docs/Development.md) for build requirements, differences between the two versions, and release packaging.
 
 MIT licensed. See [LICENSE](LICENSE).

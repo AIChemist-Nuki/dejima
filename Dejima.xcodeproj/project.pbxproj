@@ -1,0 +1,483 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		122ADCC96739872A46FABC4C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B08E74E629983C1F1AD319AF /* Assets.xcassets */; };
+		1F0EE4DBC0D6D62EBA00ADDD /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = D88590C10C2E521B7AD996E5 /* AppIcon.icon */; };
+		2966ADAD8A9B44F36A2EC639 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C4331311CC03F48024D55204 /* InfoPlist.xcstrings */; };
+		79CBC0F4A3EA1CBA6B65B71B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */; };
+		BC81F9F2ED2B74D5AC77050D /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C4331311CC03F48024D55204 /* InfoPlist.xcstrings */; };
+		CA3EEE913BA39B125421729F /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */; };
+		F0158B759C60A9D4685B33DB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B08E74E629983C1F1AD319AF /* Assets.xcassets */; };
+		F1C6D420A42CB157F57D8941 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = D88590C10C2E521B7AD996E5 /* AppIcon.icon */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		3D279A6343494934A2539A1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7E23B9AD73974BA3AB34D118 /* Dejima.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dejima.entitlements; sourceTree = "<group>"; };
+		0B0A99D654C0B99D9DB945BB /* Dejima.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dejima.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B80123CC84D4D7515E3C005 /* Dejima26.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dejima26.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B08E74E629983C1F1AD319AF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C4331311CC03F48024D55204 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		D88590C10C2E521B7AD996E5 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		18F3A1BC9ED64149A7D7AA1E /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {};
+			explicitFolders = ();
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		7B1C6C1F9406455BB143A762 /* TranslationLegacy */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {};
+			explicitFolders = ();
+			path = TranslationLegacy;
+			sourceTree = "<group>";
+		};
+		CFB278E34599438D8C21E688 /* Translation26 */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {};
+			explicitFolders = ();
+			path = Translation26;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXGroup section */
+		534242EC796B1AB36248C4FF /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				18F3A1BC9ED64149A7D7AA1E /* Shared */,
+				7B1C6C1F9406455BB143A762 /* TranslationLegacy */,
+				CFB278E34599438D8C21E688 /* Translation26 */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		2208951A8FAB67470FCA8B4B = {
+			isa = PBXGroup;
+			children = (
+				534242EC796B1AB36248C4FF /* Sources */,
+				D88590C10C2E521B7AD996E5 /* AppIcon.icon */,
+				B08E74E629983C1F1AD319AF /* Assets.xcassets */,
+				C4331311CC03F48024D55204 /* InfoPlist.xcstrings */,
+				C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */,
+				3D279A6343494934A2539A1A /* Info.plist */,
+				7E23B9AD73974BA3AB34D118 /* Dejima.entitlements */,
+				675F5FECA2FD13B15F926B87 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		675F5FECA2FD13B15F926B87 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0B0A99D654C0B99D9DB945BB /* Dejima.app */,
+				6B80123CC84D4D7515E3C005 /* Dejima26.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		49610FE8883FDEB26CBF3268 /* Dejima */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 107D5660D03B6527B46B6416 /* Build configuration list for PBXNativeTarget "Dejima" */;
+			buildPhases = (
+				D20CE2F3FF4E9886FEC013B1 /* Sources */,
+				3D6D2B29DB8AFD2C09FD0F67 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				18F3A1BC9ED64149A7D7AA1E /* Shared */,
+				7B1C6C1F9406455BB143A762 /* TranslationLegacy */,
+			);
+			name = Dejima;
+			packageProductDependencies = (
+			);
+			productName = Dejima;
+			productReference = 0B0A99D654C0B99D9DB945BB /* Dejima.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F844F12557D0FD3BF9F622FC /* Dejima26 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F916AC790CCAA7D974B7AF73 /* Build configuration list for PBXNativeTarget "Dejima26" */;
+			buildPhases = (
+				9123D8ED6B0C161213BD968E /* Sources */,
+				9C9C52B2B64080AB9C765F4E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				18F3A1BC9ED64149A7D7AA1E /* Shared */,
+				CFB278E34599438D8C21E688 /* Translation26 */,
+			);
+			name = Dejima26;
+			packageProductDependencies = (
+			);
+			productName = Dejima26;
+			productReference = 6B80123CC84D4D7515E3C005 /* Dejima26.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		50E0C13735A0F50B884DDF15 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					49610FE8883FDEB26CBF3268 = {
+						DevelopmentTeam = D56G7B2W2N;
+						ProvisioningStyle = Automatic;
+					};
+					F844F12557D0FD3BF9F622FC = {
+						DevelopmentTeam = D56G7B2W2N;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = F6D763BA0F33C3557C2E4C11 /* Build configuration list for PBXProject "Dejima" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				ja,
+				ko,
+				"zh-Hans",
+			);
+			mainGroup = 2208951A8FAB67470FCA8B4B;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 675F5FECA2FD13B15F926B87 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				49610FE8883FDEB26CBF3268 /* Dejima */,
+				F844F12557D0FD3BF9F622FC /* Dejima26 */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3D6D2B29DB8AFD2C09FD0F67 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F1C6D420A42CB157F57D8941 /* AppIcon.icon in Resources */,
+				F0158B759C60A9D4685B33DB /* Assets.xcassets in Resources */,
+				2966ADAD8A9B44F36A2EC639 /* InfoPlist.xcstrings in Resources */,
+				CA3EEE913BA39B125421729F /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9C9C52B2B64080AB9C765F4E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F0EE4DBC0D6D62EBA00ADDD /* AppIcon.icon in Resources */,
+				122ADCC96739872A46FABC4C /* Assets.xcassets in Resources */,
+				BC81F9F2ED2B74D5AC77050D /* InfoPlist.xcstrings in Resources */,
+				79CBC0F4A3EA1CBA6B65B71B /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9123D8ED6B0C161213BD968E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D20CE2F3FF4E9886FEC013B1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3D211F23B59F2604CE752320 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Dejima.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D56G7B2W2N;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				LOCALIZED_STRING_CODE_COMMENTS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nuki.Dejima;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		471CA8191B3375C2F5AA936F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Dejima.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D56G7B2W2N;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				LOCALIZED_STRING_CODE_COMMENTS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nuki.Dejima;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		5103AD4EC8B0DFC9159B3CDA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Dejima.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D56G7B2W2N;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				LOCALIZED_STRING_CODE_COMMENTS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nuki.Dejima;
+				PRODUCT_NAME = Dejima26;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B3968B5127F88A77F49916DA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E32E1FAAD62444A7CBC04ED8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Dejima.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D56G7B2W2N;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				LOCALIZED_STRING_CODE_COMMENTS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nuki.Dejima;
+				PRODUCT_NAME = Dejima26;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		F1DF5F2CE7E2C104E2EE0E64 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		107D5660D03B6527B46B6416 /* Build configuration list for PBXNativeTarget "Dejima" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3D211F23B59F2604CE752320 /* Debug */,
+				471CA8191B3375C2F5AA936F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F6D763BA0F33C3557C2E4C11 /* Build configuration list for PBXProject "Dejima" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B3968B5127F88A77F49916DA /* Debug */,
+				F1DF5F2CE7E2C104E2EE0E64 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F916AC790CCAA7D974B7AF73 /* Build configuration list for PBXNativeTarget "Dejima26" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5103AD4EC8B0DFC9159B3CDA /* Debug */,
+				E32E1FAAD62444A7CBC04ED8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 50E0C13735A0F50B884DDF15 /* Project object */;
+}
