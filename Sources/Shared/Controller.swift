@@ -22,6 +22,7 @@ final class Controller: ObservableObject {
     @Published private(set) var hasAccessibility = false
 
     private let monitor = DoubleCopyMonitor()
+    private let feedback = SelectionFeedback()
     private var panel: ResultPanel?
     private var guide: PermissionGuide?
     private var currentJob: Task<Void, Never>?
@@ -34,6 +35,9 @@ final class Controller: ObservableObject {
 
         monitor.onDoubleCopy = { [weak self] text in
             self?.handle(text)
+        }
+        monitor.onReadOutcome = { [weak self] app, succeeded in
+            self?.recordRead(in: app, succeeded: succeeded)
         }
         refreshPermission()
         if hasAccessibility {
@@ -141,6 +145,20 @@ final class Controller: ObservableObject {
                 result.fail(error)
             }
         }
+    }
+
+    /// Repeated unreadable selections in one app suggest it needs support;
+    /// ask the user to report it.
+    private func recordRead(in app: NSRunningApplication?, succeeded: Bool) {
+        guard !succeeded else {
+            feedback.recordSuccess(in: app)
+            return
+        }
+        guard let prompt = feedback.recordFailure(in: app) else { return }
+        currentJob?.cancel()
+        generation += 1
+        result.showFeedback(prompt)
+        panel?.show(near: NSEvent.mouseLocation)
     }
 
     func copyResult() {

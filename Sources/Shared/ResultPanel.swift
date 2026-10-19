@@ -9,6 +9,7 @@ final class ResultModel: ObservableObject {
         case refining(String)
         case done(String)
         case failed(String)
+        case feedback(SelectionFeedback.Prompt)
     }
 
     @Published var sourceText = ""
@@ -22,7 +23,7 @@ final class ResultModel: ObservableObject {
         switch state {
         case .done(let text), .refining(let text):
             return text
-        case .translating, .streaming, .failed:
+        case .translating, .streaming, .failed, .feedback:
             return nil
         }
     }
@@ -49,6 +50,12 @@ final class ResultModel: ObservableObject {
 
     func fail(_ error: Error) {
         state = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+    }
+
+    func showFeedback(_ prompt: SelectionFeedback.Prompt) {
+        sourceText = ""
+        routeLabel = ""
+        state = .feedback(prompt)
     }
 }
 

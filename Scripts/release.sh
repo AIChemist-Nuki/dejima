@@ -119,8 +119,6 @@ if [ "$LOCAL_BUILD" -eq 0 ]; then
     xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" --output-format json >/dev/null
 fi
 
-ICON="$PWD/Assets.xcassets/AppIcon.appiconset/icon_512.png"
-
 # Show command output only on failure.
 quiet() {
     local log="$BUILD/step.log"
@@ -219,6 +217,10 @@ fi
 APP="$STAGE/Dejima.app"
 cp -R "$BUILT_APP" "$APP"
 ln -s /Applications "$STAGE/Applications"
+
+# Xcode compiles AppIcon.icon into this file; the DMG artwork reuses it.
+ICON="$APP/Contents/Resources/AppIcon.icns"
+[ -f "$ICON" ] || { echo "error: $ICON missing from the built app" >&2; exit 1; }
 
 codesign --verify --strict --deep "$APP"
 if [ "$LOCAL_BUILD" -eq 1 ]; then

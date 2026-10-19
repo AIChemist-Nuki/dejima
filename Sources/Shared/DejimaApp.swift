@@ -11,5 +11,12 @@ struct DejimaApp: App {
             Image(nsImage: DejimaMark.menuBarImage())
         }
         .menuBarExtraStyle(.menu)
+
+        Window("About Dejima", id: AboutView.windowID) {
+            AboutView()
+        }
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(.suppressed)
+        .restorationBehavior(.disabled)
     }
 }

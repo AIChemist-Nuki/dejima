@@ -9,6 +9,7 @@ struct MenuBarView: View {
     /// Read system status because login registration can change outside the app.
     @State private var launchAtLogin = LoginItem.isEnabled
     @ObservedObject private var updater = Updater.shared
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         if !controller.hasAccessibility {
@@ -65,24 +66,27 @@ struct MenuBarView: View {
             Button("Approve in Login Items…") { LoginItem.openSettings() }
         }
 
-        Toggle("Check for updates automatically", isOn: Binding(
-            get: { updater.checksAutomatically },
-            set: { updater.setChecksAutomatically($0) }
-        ))
-
         Divider()
 
-        Button {
-            updater.checkNow()
-        } label: {
-            if updater.updateAvailable {
-                Text("Update available")
-            } else {
-                Text("Check for updates")
+        // Keep a pending update visible outside the About window.
+        if updater.updateAvailable {
+            Button("Update available") { updater.checkNow() }
+                .disabled(!updater.canCheckForUpdates)
+        }
+        Button("Translation language settings") { openTranslationSettings() }
+        Button("About Dejima…") {
+            openWindow(id: AboutView.windowID)
+            // Bring the window forward once the menu has closed. The active app
+            // may decline activation, so order the window front regardless.
+            DispatchQueue.main.async {
+                NSApp.activate()
+                guard let window = NSApp.windows.first(where: {
+                    $0.identifier?.rawValue.hasPrefix(AboutView.windowID) == true
+                }) else { return }
+                window.orderFrontRegardless()
+                window.makeKey()
             }
         }
-        .disabled(!updater.canCheckForUpdates)
-        Button("Translation language settings") { openTranslationSettings() }
         Button("Quit Dejima") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }
