@@ -82,13 +82,18 @@ The project's `Sources` group contains the file system synchronized folder `Shar
 - `Sources/Shared/LanguageSetup.swift` checks the selected languages and requests downloads during setup.
 - `Sources/Shared/Updater.swift` manages Sparkle updates; `LoginItem.swift` manages launch at login.
 
-UI translations are stored in `Localizable.xcstrings` and `InfoPlist.xcstrings`. These catalogs, `Assets.xcassets`, and `AppIcon.icon` are shared resources at the repository root. Keep them included in the target and update the project's language list in Xcode when adding localizations.
+UI translations are stored in `Localizable.xcstrings` and `InfoPlist.xcstrings`. These catalogs and `AppIcon.icon` are shared resources at the repository root. Keep them included in the target and update the project's language list in Xcode when adding localizations.
 
 ## App icon
 
 Edit `AppIcon.icon` in Icon Composer. Xcode uses it for the app and generates compatible icons for older macOS releases. The menu bar symbol remains in `Sources/Shared/DejimaMark.swift`.
 
-Run `./Scripts/app-icon.sh` with Xcode 27 selected to refresh the PNGs in `Assets.xcassets/AppIcon.appiconset`. These exports include the traditional macOS inset; packaging uses `icon_512.png` for DMG artwork and the volume icon.
+Packaging uses the `AppIcon.icns` that Xcode generates inside the built app for DMG artwork and the volume icon. After changing the icon, refresh the README image from a build:
+
+```bash
+iconutil -c iconset build/local/dmg/Dejima.app/Contents/Resources/AppIcon.icns -o /tmp/AppIcon.iconset
+cp /tmp/AppIcon.iconset/icon_128x128@2x.png docs/images/icon.png
+```
 
 ## In-app updates
 

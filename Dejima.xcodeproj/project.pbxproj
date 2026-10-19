@@ -11,7 +11,6 @@
 		2966ADAD8A9B44F36A2EC639 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C4331311CC03F48024D55204 /* InfoPlist.xcstrings */; };
 		7B5F04013EED478ABC83F901 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BC734AAA31AB4E4AA0F03A01 /* Sparkle */; };
 		CA3EEE913BA39B125421729F /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */; };
-		F0158B759C60A9D4685B33DB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B08E74E629983C1F1AD319AF /* Assets.xcassets */; };
 		F1C6D420A42CB157F57D8941 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = D88590C10C2E521B7AD996E5 /* AppIcon.icon */; };
 /* End PBXBuildFile section */
 
@@ -20,7 +19,6 @@
 		3D279A6343494934A2539A1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7E23B9AD73974BA3AB34D118 /* Dejima.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dejima.entitlements; sourceTree = "<group>"; };
 		A415B8579DAA4308927D1100 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
-		B08E74E629983C1F1AD319AF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C4331311CC03F48024D55204 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		D88590C10C2E521B7AD996E5 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
@@ -51,7 +49,6 @@
 			children = (
 				534242EC796B1AB36248C4FF /* Sources */,
 				D88590C10C2E521B7AD996E5 /* AppIcon.icon */,
-				B08E74E629983C1F1AD319AF /* Assets.xcassets */,
 				C4331311CC03F48024D55204 /* InfoPlist.xcstrings */,
 				C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */,
 				A415B8579DAA4308927D1100 /* ThirdPartyNotices.txt */,
@@ -149,7 +146,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F1C6D420A42CB157F57D8941 /* AppIcon.icon in Resources */,
-				F0158B759C60A9D4685B33DB /* Assets.xcassets in Resources */,
 				2966ADAD8A9B44F36A2EC639 /* InfoPlist.xcstrings in Resources */,
 				CA3EEE913BA39B125421729F /* Localizable.xcstrings in Resources */,
 				09285642844843A79C0F1701 /* ThirdPartyNotices.txt in Resources */,

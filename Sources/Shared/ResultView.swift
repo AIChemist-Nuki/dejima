@@ -32,12 +32,14 @@ struct ResultView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     output
-                    Divider().opacity(0.5)
-                    Text(model.sourceText)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if !model.sourceText.isEmpty {
+                        Divider().opacity(0.5)
+                        Text(model.sourceText)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
                 // Measure the content height inside the scroll view, before viewport clipping.
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
@@ -120,6 +122,11 @@ struct ResultView: View {
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+
+        case .feedback(let prompt):
+            FeedbackPromptView(prompt: prompt, onClose: onClose)
+                // Reset the mute guard for each new prompt.
+                .id(prompt.id)
         }
     }
 
@@ -139,6 +146,87 @@ struct ResultView: View {
     }
 }
 
+/// Asks the user to report an app whose selections Dejima repeatedly can't read.
+private struct FeedbackPromptView: View {
+    let prompt: SelectionFeedback.Prompt
+    var onClose: () -> Void
+
+    /// Keeps a reflexive click from muting the prompt before it's been read.
+    private static let muteDelay: Duration = .seconds(3)
+
+    @State private var canMute = false
+    @State private var isConfirmingMute = false
+    @State private var copiedReport = false
+
+    private var appName: String { prompt.app.name }
+
+    private var channels: [FeedbackChannel] {
+        FeedbackChannel.all.filter { $0.url(prompt.report) != nil }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Dejima can't read the selected text in \(appName)", systemImage: "text.badge.xmark")
+                .font(.body.weight(.medium))
+            Text("This happened \(SelectionFeedback.failureThreshold) times in a row. If you had text selected, let the author know so this app can be supported.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 8) {
+                ForEach(channels) { channel in
+                    Button {
+                        if channel.send(prompt.report) { copiedReport = true }
+                    } label: {
+                        Label(channel.title, systemImage: channel.systemImage)
+                    }
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+
+            Text(copiedReport
+                 ? LocalizedStringKey("Diagnostic info copied. Paste it into your message.")
+                 : LocalizedStringKey("Feedback includes the app's name and version, never the text you selected."))
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+
+            if prompt.offersMute {
+                Divider().opacity(0.5)
+                muteControl
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .task {
+            try? await Task.sleep(for: Self.muteDelay)
+            canMute = true
+        }
+    }
+
+    @ViewBuilder
+    private var muteControl: some View {
+        if isConfirmingMute {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Stop reminders for \(appName)? You won't be asked about this app again.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Button("Cancel") { isConfirmingMute = false }
+                    Button("Stop Reminders", role: .destructive) {
+                        SelectionFeedback.mute(prompt.app.bundleID)
+                        onClose()
+                    }
+                }
+                .controlSize(.small)
+            }
+        } else {
+            Button("Don't remind me for \(appName)") { isConfirmingMute = true }
+                .buttonStyle(.link)
+                .font(.caption)
+                .disabled(!canMute)
+        }
+    }
+}
+
 #Preview {
     let model = ResultModel()
     model.sourceText = "本研究では、葉酸代謝経路におけるミトコンドリア酵素の役割を検討した。"
@@ -146,4 +234,11 @@ struct ResultView: View {
     model.state = .done("本研究探讨了叶酸代谢通路中线粒体酶的作用。")
     return ResultView(model: model, onContentHeightChange: { _ in }, onClose: {})
         .frame(width: ResultView.Layout.width, height: 220)
+}
+
+#Preview("Feedback") {
+    let model = ResultModel()
+    model.showFeedback(.init(app: .init(.current), offersMute: true))
+    return ResultView(model: model, onContentHeightChange: { _ in }, onClose: {})
+        .frame(width: ResultView.Layout.width, height: 280)
 }

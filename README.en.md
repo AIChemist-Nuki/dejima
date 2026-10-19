@@ -1,4 +1,4 @@
-<img src="Assets.xcassets/AppIcon.appiconset/icon_128.png" alt="Dejima" width="64" align="right">
+<img src="docs/images/icon.png" alt="Dejima" width="64" align="right">
 
 # Dejima
 
