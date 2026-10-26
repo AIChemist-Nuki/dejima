@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# Archives the sandboxed App Store build and exports a signed installer package.
+# Archives the sandboxed App Store build, verifies it, and uploads it to
+# App Store Connect. The verified package is kept as dist/Dejima-X.Y.Z-AppStore.pkg.
 #
-#   ./Scripts/appstore.sh            export dist/Dejima-X.Y.Z-AppStore.pkg
-#   ./Scripts/appstore.sh --upload   export, then upload the build to App Store Connect
+# ./Scripts/release.sh runs this after publishing the DMG. Run it directly
+# only to retry the App Store step for the version HEAD is tagged with.
 #
-# Builds the version HEAD is tagged with, so run ./Scripts/release.sh first to
-# create the tag. The App Store build comes from the same commit as the DMG.
+# Uploading doesn't publish: submit the build for review in App Store Connect.
 #
 # CFBundleVersion must increase with every upload, even for the same version,
 # so it defaults to a UTC timestamp such as 202610261530. Override it with
@@ -19,7 +19,7 @@
 #   ASC_KEY_PATH=~/.appstoreconnect/AuthKey_XXXXXXXXXX.p8 \
 #   ASC_KEY_ID=XXXXXXXXXX \
 #   ASC_ISSUER_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
-#   ./Scripts/appstore.sh --upload
+#   ./Scripts/release.sh 0.3.0
 #
 # Create the app record in App Store Connect (bundle ID com.nuki.Dejima)
 # before the first upload.
@@ -28,12 +28,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-UPLOAD=0
-case "${1:-}" in
-    "") ;;
-    --upload) UPLOAD=1 ;;
-    *) echo "usage: $0 [--upload]" >&2; exit 1 ;;
-esac
+[ $# -eq 0 ] || { echo "usage: $0" >&2; exit 1; }
 
 if [ -n "$(git status --porcelain)" ]; then
     echo "error: uncommitted changes. Commit or stash them first:" >&2
@@ -51,7 +46,16 @@ xcodebuild -version >/dev/null 2>&1 || {
 TAG=$(git tag --points-at HEAD --list 'v[0-9]*' | sort -V | tail -1)
 [ -n "$TAG" ] || {
     echo "error: HEAD has no vX.Y.Z tag. Tag it with ./Scripts/release.sh X.Y.Z first." >&2
-    echo "       (latest tag: $(git describe --tags --abbrev=0 2>/dev/null || echo none))" >&2
+    # git describe only sees tags in HEAD's history; tags left on squash-merged
+    # branches are outside it, so report the newest tag and where it points.
+    latest=$(git tag --list 'v[0-9]*' | sort -V | tail -1)
+    if [ -z "$latest" ]; then
+        echo "       (no vX.Y.Z tags yet)" >&2
+    elif git merge-base --is-ancestor "$latest" HEAD; then
+        echo "       (latest tag: $latest, $(git rev-list --count "$latest"..HEAD) commits before HEAD)" >&2
+    else
+        echo "       (latest tag: $latest, on $(git rev-parse --short "$latest^{commit}"), which isn't in HEAD's history)" >&2
+    fi
     exit 1
 }
 VERSION="${TAG#v}"
@@ -205,18 +209,12 @@ echo "    sandbox:   on"
 rm -rf "$BUILD/expanded"
 mv -f "$BUILD/export/Dejima.pkg" "$PKG"
 
-if [ "$UPLOAD" -eq 1 ]; then
-    echo "==> Uploading to App Store Connect"
-    export_options upload > "$BUILD/UploadOptions.plist"
-    quiet xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportPath "$BUILD/upload" \
-        -exportOptionsPlist "$BUILD/UploadOptions.plist" -allowProvisioningUpdates ${auth_args[@]+"${auth_args[@]}"}
-    echo "    Uploaded. The build appears in App Store Connect after processing."
-fi
+echo "==> Uploading to App Store Connect"
+export_options upload > "$BUILD/UploadOptions.plist"
+quiet xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportPath "$BUILD/upload" \
+    -exportOptionsPlist "$BUILD/UploadOptions.plist" -allowProvisioningUpdates ${auth_args[@]+"${auth_args[@]}"}
 
 echo
-echo "==> Verified package"
+echo "==> Uploaded $VERSION ($BUILD_NUMBER)"
 echo "    $PKG"
-if [ "$UPLOAD" -eq 0 ]; then
-    echo
-    echo "Upload with ./Scripts/appstore.sh --upload, or drag the package into Transporter."
-fi
+echo "    Submit it for review in App Store Connect once processing finishes."

@@ -1,6 +1,7 @@
 #!/bin/bash
 #
-# Builds the app, a DMG, and a signed Sparkle update archive.
+# Builds the app, a DMG, and a signed Sparkle update archive, then the
+# App Store build from the same commit (see Scripts/appstore.sh).
 #
 #   ./Scripts/release.sh 0.3.0    tag HEAD as v0.3.0, then build it
 #   ./Scripts/release.sh          build the version HEAD is already tagged with
@@ -12,6 +13,7 @@
 #   git push origin main v0.3.0
 #
 # Scripts/dmg-window.swift generates the DMG background and Finder layout.
+# Local builds skip the App Store step.
 #
 # Public distribution requires Developer ID signing, notarization, and an
 # existing Sparkle signing key in the login Keychain:
@@ -450,3 +452,13 @@ echo "==> Verified packages"
 for artifact in "${artifacts[@]}"; do
     echo "    $DIST/${artifact##*/}"
 done
+
+if [ "$LOCAL_BUILD" -eq 0 ]; then
+    echo
+    ./Scripts/appstore.sh || {
+        echo >&2
+        echo "error: the DMG release is ready in $DIST, but the App Store step failed." >&2
+        echo "       Fix the problem above, then retry only that step: ./Scripts/appstore.sh" >&2
+        exit 1
+    }
+fi
