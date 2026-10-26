@@ -8,7 +8,9 @@ struct MenuBarView: View {
     @AppStorage("polishWithAppleIntelligence") private var polish = false
     /// Read system status because login registration can change outside the app.
     @State private var launchAtLogin = LoginItem.isEnabled
+    #if !APP_STORE
     @ObservedObject private var updater = Updater.shared
+    #endif
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -68,11 +70,13 @@ struct MenuBarView: View {
 
         Divider()
 
+        #if !APP_STORE
         // Keep a pending update visible outside the About window.
         if updater.updateAvailable {
             Button("Update available") { updater.checkNow() }
                 .disabled(!updater.canCheckForUpdates)
         }
+        #endif
         Button("Translation language settings") { openTranslationSettings() }
         Button("About Dejima…") {
             openWindow(id: AboutView.windowID)

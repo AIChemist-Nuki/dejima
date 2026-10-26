@@ -1,3 +1,5 @@
+// The App Store delivers its own updates and doesn't allow in-app updaters.
+#if !APP_STORE
 import AppKit
 import Combine
 import Sparkle
@@ -66,3 +68,4 @@ final class Updater: NSObject, ObservableObject, SPUUpdaterDelegate, @preconcurr
         updateAvailable = false
     }
 }
+#endif

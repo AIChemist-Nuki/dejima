@@ -5,7 +5,9 @@ import SwiftUI
 struct AboutView: View {
     static let windowID = "about"
 
+    #if !APP_STORE
     @ObservedObject private var updater = Updater.shared
+    #endif
     /// Read on appear and after restoring; mutes change from result panels.
     @State private var hasMutedApps = SelectionFeedback.hasMutedApps
     @State private var copiedReport = false
@@ -29,6 +31,7 @@ struct AboutView: View {
             }
 
             Form {
+                #if !APP_STORE
                 Section("Updates") {
                     LabeledContent {
                         Button(updater.updateAvailable
@@ -47,6 +50,7 @@ struct AboutView: View {
                         set: { updater.setChecksAutomatically($0) }
                     ))
                 }
+                #endif
 
                 Section {
                     HStack(spacing: 8) {

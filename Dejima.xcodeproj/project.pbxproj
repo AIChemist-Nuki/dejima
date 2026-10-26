@@ -12,6 +12,9 @@
 		7B5F04013EED478ABC83F901 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BC734AAA31AB4E4AA0F03A01 /* Sparkle */; };
 		CA3EEE913BA39B125421729F /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */; };
 		F1C6D420A42CB157F57D8941 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = D88590C10C2E521B7AD996E5 /* AppIcon.icon */; };
+		046E7A4594FA42EC91CAA37B /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = D88590C10C2E521B7AD996E5 /* AppIcon.icon */; };
+		AC572EB1A6F74342BBA4D115 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C4331311CC03F48024D55204 /* InfoPlist.xcstrings */; };
+		A6353A6AAC794CCFA3DB6315 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +25,9 @@
 		C4331311CC03F48024D55204 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		C5F4739A9433FE4D1DE9197D /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		D88590C10C2E521B7AD996E5 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		CF521637A3D04C039B12E061 /* Dejima.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dejima.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8C762E0449584F6AAF74A65F /* Dejima-AppStore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Dejima-AppStore.entitlements"; sourceTree = "<group>"; };
+		E33279B625034768A2BBC83D /* Info-AppStore.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-AppStore.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -41,6 +47,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1E8255AA852C4381B5475C6B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -54,6 +67,8 @@
 				A415B8579DAA4308927D1100 /* ThirdPartyNotices.txt */,
 				3D279A6343494934A2539A1A /* Info.plist */,
 				7E23B9AD73974BA3AB34D118 /* Dejima.entitlements */,
+				E33279B625034768A2BBC83D /* Info-AppStore.plist */,
+				8C762E0449584F6AAF74A65F /* Dejima-AppStore.entitlements */,
 				675F5FECA2FD13B15F926B87 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -70,6 +85,7 @@
 			isa = PBXGroup;
 			children = (
 				0B0A99D654C0B99D9DB945BB /* Dejima.app */,
+				CF521637A3D04C039B12E061 /* Dejima.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -100,6 +116,26 @@
 			productReference = 0B0A99D654C0B99D9DB945BB /* Dejima.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B0A583FA1BE249F2BF13680B /* Dejima App Store */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9F985E68887849DE890381D2 /* Build configuration list for PBXNativeTarget "Dejima App Store" */;
+			buildPhases = (
+				1E8255AA852C4381B5475C6B /* Frameworks */,
+				1420853093E54AF6B84CC805 /* Sources */,
+				145D4BE8EBFA4CE5B2033576 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				18F3A1BC9ED64149A7D7AA1E /* Shared */,
+			);
+			name = "Dejima App Store";
+			productName = Dejima;
+			productReference = CF521637A3D04C039B12E061 /* Dejima.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -110,6 +146,10 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					49610FE8883FDEB26CBF3268 = {
+						DevelopmentTeam = D56G7B2W2N;
+						ProvisioningStyle = Automatic;
+					};
+					B0A583FA1BE249F2BF13680B = {
 						DevelopmentTeam = D56G7B2W2N;
 						ProvisioningStyle = Automatic;
 					};
@@ -136,6 +176,7 @@
 			projectRoot = "";
 			targets = (
 				49610FE8883FDEB26CBF3268 /* Dejima */,
+				B0A583FA1BE249F2BF13680B /* Dejima App Store */,
 			);
 		};
 /* End PBXProject section */
@@ -152,10 +193,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		145D4BE8EBFA4CE5B2033576 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				046E7A4594FA42EC91CAA37B /* AppIcon.icon in Resources */,
+				AC572EB1A6F74342BBA4D115 /* InfoPlist.xcstrings in Resources */,
+				A6353A6AAC794CCFA3DB6315 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		D20CE2F3FF4E9886FEC013B1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1420853093E54AF6B84CC805 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -338,6 +396,68 @@
 			};
 			name = Release;
 		};
+		D07C3C60E34A4BE1A0280003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Dejima-AppStore.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-AppStore";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D56G7B2W2N;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Info-AppStore.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				LOCALIZED_STRING_CODE_COMMENTS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nuki.Dejima;
+				PRODUCT_NAME = Dejima;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) APP_STORE";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		439D9E7F1704469CBE12584B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Dejima-AppStore.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-AppStore";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D56G7B2W2N;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Info-AppStore.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				LOCALIZED_STRING_CODE_COMMENTS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nuki.Dejima;
+				PRODUCT_NAME = Dejima;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) APP_STORE";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -355,6 +475,15 @@
 			buildConfigurations = (
 				B3968B5127F88A77F49916DA /* Debug */,
 				F1DF5F2CE7E2C104E2EE0E64 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9F985E68887849DE890381D2 /* Build configuration list for PBXNativeTarget "Dejima App Store" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D07C3C60E34A4BE1A0280003 /* Debug */,
+				439D9E7F1704469CBE12584B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

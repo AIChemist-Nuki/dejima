@@ -8,7 +8,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         controller.start()
+        #if !APP_STORE
         Updater.shared.start()
+        #endif
     }
 }
 
