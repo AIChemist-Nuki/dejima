@@ -197,11 +197,17 @@ printf '%s\n' "$signing_details" | grep -q '^Authority=Apple Distribution: ' || 
 printf '%s\n' "$signing_details" | grep -q 'flags=.*runtime' || {
     echo "error: Dejima is missing hardened runtime" >&2; exit 1
 }
-entitlements=$(codesign -d --entitlements :- "$SHIPPED_APP" 2>/dev/null)
-[ "$(printf '%s' "$entitlements" | plutil -extract com.apple.security.app-sandbox raw - 2>/dev/null)" = true ] || {
+# PlistBuddy separates key paths with ':', so dotted entitlement names stay
+# intact; plutil -extract would split them at each '.'.
+ENTITLEMENTS="$BUILD/entitlements.plist"
+codesign -d --entitlements "$ENTITLEMENTS" --xml "$SHIPPED_APP" 2>/dev/null
+entitlement() {
+    /usr/libexec/PlistBuddy -c "Print :$1" "$ENTITLEMENTS" 2>/dev/null || true
+}
+[ "$(entitlement com.apple.security.app-sandbox)" = true ] || {
     echo "error: the App Store build is not sandboxed" >&2; exit 1
 }
-[ "$(printf '%s' "$entitlements" | plutil -extract com.apple.security.get-task-allow raw - 2>/dev/null)" != true ] || {
+[ "$(entitlement com.apple.security.get-task-allow)" != true ] || {
     echo "error: the App Store build allows debugging (get-task-allow)" >&2; exit 1
 }
 echo "    signed by: $(printf '%s\n' "$signing_details" | sed -n 's/^Authority=//p' | head -1)"
