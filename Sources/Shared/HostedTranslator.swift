@@ -40,7 +40,10 @@ final class HostedTranslator: ObservableObject, Translator {
         }
     }
 
+    /// A task SwiftUI has already replaced leaves the job for its successor;
+    /// otherwise the superseded task would claim it and then fail it.
     private func takePending() -> Job? {
+        guard !Task.isCancelled else { return nil }
         defer { pending = nil }
         return pending
     }
