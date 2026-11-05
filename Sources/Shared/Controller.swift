@@ -58,7 +58,8 @@ final class Controller: ObservableObject {
 
     /// Show the guide if access is denied, since the system prompt may not reappear.
     func requestPermission() {
-        let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
+        // The value of kAXTrustedCheckOptionPrompt, a C global Swift 6 can't read safely.
+        let key = "AXTrustedCheckOptionPrompt"
         let granted = AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
         hasAccessibility = granted
         if granted {

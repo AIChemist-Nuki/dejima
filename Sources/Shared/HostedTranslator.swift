@@ -8,7 +8,7 @@ import Translation
 final class HostedTranslator: ObservableObject, Translator {
     @Published fileprivate var configuration: TranslationSession.Configuration?
 
-    private struct Job {
+    private struct Job: Sendable {
         let text: String
         let onPartial: @MainActor (String) -> Void
         let continuation: CheckedContinuation<String, Error>
@@ -40,16 +40,22 @@ final class HostedTranslator: ObservableObject, Translator {
         }
     }
 
-    fileprivate func serve(_ session: TranslationSession) async {
-        guard let job = pending else { return }
-        pending = nil
+    private func takePending() -> Job? {
+        defer { pending = nil }
+        return pending
+    }
+
+    /// Runs off the main actor: TranslationSession isn't Sendable, so it must
+    /// stay in the task that received it.
+    nonisolated fileprivate func serve(_ session: TranslationSession) async {
+        guard let job = await takePending() else { return }
 
         do {
             var parts: [String] = []
             for chunk in TranslationHub.chunk(job.text) {
                 let response = try await session.translate(chunk)
                 parts.append(response.targetText)
-                job.onPartial(parts.joined(separator: "\n\n"))
+                await job.onPartial(parts.joined(separator: "\n\n"))
             }
             job.continuation.resume(returning: parts.joined(separator: "\n\n"))
         } catch {
@@ -66,7 +72,8 @@ private struct TranslationHostView: View {
     var body: some View {
         Color.clear
             .frame(width: 1, height: 1)
-            .translationTask(translator.configuration) { session in
+            // @Sendable keeps the action off the main actor; see serve(_:).
+            .translationTask(translator.configuration) { @Sendable session in
                 await translator.serve(session)
             }
     }

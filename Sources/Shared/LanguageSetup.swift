@@ -80,28 +80,43 @@ final class LanguageSetupModel: ObservableObject {
         }
     }
 
-    func prepare(using session: TranslationSession, request: Request?) async {
-        guard let request, request.generation == generation else { return }
+    /// Runs off the main actor: TranslationSession isn't Sendable, so it must
+    /// stay in the task that received it.
+    nonisolated func prepare(using session: TranslationSession, request: Request?) async {
+        guard let request, await isCurrent(request) else { return }
         do {
             try await session.prepareTranslation()
-            guard !Task.isCancelled, request.generation == generation else { return }
-            // Preparation can return while a system download is still in progress.
-            checkTask = Task { [weak self] in
-                guard let self else { return }
-                while !Task.isCancelled, request.generation == self.generation {
-                    await self.check(generation: request.generation, waitingFor: request)
-                    guard self.state == .downloading else { return }
-                    do {
-                        try await Task.sleep(for: .seconds(1))
-                    } catch {
-                        return
-                    }
+            guard !Task.isCancelled else { return }
+            await didPrepare(request)
+        } catch {
+            await didFailPreparing(request)
+        }
+    }
+
+    private func isCurrent(_ request: Request) -> Bool {
+        request.generation == generation
+    }
+
+    private func didPrepare(_ request: Request) {
+        guard isCurrent(request) else { return }
+        // Preparation can return while a system download is still in progress.
+        checkTask = Task { [weak self] in
+            guard let self else { return }
+            while !Task.isCancelled, request.generation == self.generation {
+                await self.check(generation: request.generation, waitingFor: request)
+                guard self.state == .downloading else { return }
+                do {
+                    try await Task.sleep(for: .seconds(1))
+                } catch {
+                    return
                 }
             }
-        } catch {
-            guard request.generation == generation else { return }
-            state = .failed
         }
+    }
+
+    private func didFailPreparing(_ request: Request) {
+        guard isCurrent(request) else { return }
+        state = .failed
     }
 
     func finish() -> Bool {
@@ -203,7 +218,8 @@ struct LanguageSetupView: View {
             model.synchronizePreferences()
         }
         .onDisappear { model.cancel() }
-        .translationTask(model.configuration) { [request = model.request] session in
+        // @Sendable keeps the action off the main actor; see prepare(using:request:).
+        .translationTask(model.configuration) { @Sendable [request = model.request] session in
             await model.prepare(using: session, request: request)
         }
     }

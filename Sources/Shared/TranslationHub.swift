@@ -30,7 +30,7 @@ final class TranslationHub {
 
     /// Translate paragraphs separately so results can appear incrementally.
     /// Split paragraphs longer than the request limit.
-    static func chunk(_ text: String, limit: Int = 1200) -> [String] {
+    nonisolated static func chunk(_ text: String, limit: Int = 1200) -> [String] {
         var chunks: [String] = []
         for paragraph in text.components(separatedBy: "\n") {
             var rest = Substring(paragraph.trimmingCharacters(in: .whitespaces))

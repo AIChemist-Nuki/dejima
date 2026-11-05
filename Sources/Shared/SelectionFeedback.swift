@@ -50,13 +50,13 @@ struct FeedbackReport: Hashable {
 }
 
 /// A place to send feedback. Add new channels to `all`.
-struct FeedbackChannel: Identifiable {
+struct FeedbackChannel: Identifiable, Sendable {
     let id: String
-    let title: LocalizedStringKey
+    let title: LocalizedStringResource
     let systemImage: String
     /// Channels that can't prefill a message get the report on the clipboard.
     let prefillsReport: Bool
-    let url: (FeedbackReport) -> URL?
+    let url: @Sendable (FeedbackReport) -> URL?
 
     static let all: [FeedbackChannel] = [github, email, xiaohongshu]
 
