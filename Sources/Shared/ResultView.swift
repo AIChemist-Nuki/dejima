@@ -62,32 +62,24 @@ struct ResultView: View {
             Spacer()
 
             if let text = model.copyableText {
-                Button {
-                    let pasteboard = NSPasteboard.general
-                    pasteboard.clearContents()
-                    pasteboard.setString(text, forType: .string)
-                } label: {
-                    Image(systemName: "doc.on.doc")
-                }
-                .help("Copy translation")
+                Button("Copy translation", systemImage: "doc.on.doc") { copy(text) }
+                    .help("Copy translation")
             }
 
-            Button {
+            Button(model.isPinned ? LocalizedStringKey("Unpin") : LocalizedStringKey("Pin"),
+                   systemImage: model.isPinned ? "pin.fill" : "pin") {
                 model.isPinned.toggle()
-            } label: {
-                Image(systemName: model.isPinned ? "pin.fill" : "pin")
             }
             .foregroundStyle(model.isPinned ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
             .help(model.isPinned
                   ? LocalizedStringKey("Unpin")
                   : LocalizedStringKey("Keep the panel open when you click elsewhere"))
 
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-            }
-            .help("Close")
+            Button("Close", systemImage: "xmark", action: onClose)
+                .help("Close")
         }
         .buttonStyle(.borderless)
+        .labelStyle(.iconOnly)
         .font(.system(size: 11, weight: .medium))
         .frame(height: Layout.headerHeight)
     }
@@ -128,6 +120,12 @@ struct ResultView: View {
                 // Reset the mute guard for each new prompt.
                 .id(prompt.id)
         }
+    }
+
+    private func copy(_ text: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
     }
 
     private func translation(_ text: String) -> some View {
