@@ -103,11 +103,6 @@ final class Controller {
 
     // MARK: - Translation flow
 
-    func retranslate() {
-        guard !result.sourceText.isEmpty else { return }
-        handle(result.sourceText)
-    }
-
     private func handle(_ text: String) {
         // Normalize PDF line wraps before detection, translation, and display.
         let trimmed = TextCleaner.unwrap(text).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -163,17 +158,6 @@ final class Controller {
         generation += 1
         result.showFeedback(prompt)
         panel?.show(near: NSEvent.mouseLocation)
-    }
-
-    func copyResult() {
-        guard let text = result.copyableText else { return }
-        let pb = NSPasteboard.general
-        pb.clearContents()
-        pb.setString(text, forType: .string)
-    }
-
-    func hidePanel() {
-        panel?.hide()
     }
 }
 
