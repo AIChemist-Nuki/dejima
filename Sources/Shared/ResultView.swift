@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 struct ResultView: View {
-    @ObservedObject var model: ResultModel
+    let model: ResultModel
     /// Report content height to resize the result panel.
     var onContentHeightChange: (CGFloat) -> Void
     var onClose: () -> Void

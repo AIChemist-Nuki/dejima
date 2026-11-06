@@ -16,12 +16,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 /// Coordinates copy monitoring, language routing, translation, and results.
 @MainActor
-final class Controller: ObservableObject {
+@Observable
+final class Controller {
     let hub = TranslationHub()
     let result = ResultModel()
 
-    @Published private(set) var isMonitoring = false
-    @Published private(set) var hasAccessibility = false
+    private(set) var isMonitoring = false
+    private(set) var hasAccessibility = false
 
     private let monitor = DoubleCopyMonitor()
     private let feedback = SelectionFeedback()

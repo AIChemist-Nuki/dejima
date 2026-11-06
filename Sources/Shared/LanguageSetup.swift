@@ -2,7 +2,8 @@ import SwiftUI
 import Translation
 
 @MainActor
-final class LanguageSetupModel: ObservableObject {
+@Observable
+final class LanguageSetupModel {
     enum State: Equatable {
         case checking, ready, needsDownload, downloading, unsupported, failed
     }
@@ -17,20 +18,20 @@ final class LanguageSetupModel: ObservableObject {
         UserDefaults.standard.bool(forKey: "hasCompletedLanguageSetup")
     }
 
-    @Published var primary = LanguageRouter.primary {
+    var primary = LanguageRouter.primary {
         didSet {
             LanguageRouter.primary = primary
             refresh()
         }
     }
-    @Published var secondary = LanguageRouter.secondary {
+    var secondary = LanguageRouter.secondary {
         didSet {
             LanguageRouter.secondary = secondary
             refresh()
         }
     }
-    @Published private(set) var state: State = .checking
-    @Published private(set) var configuration: TranslationSession.Configuration?
+    private(set) var state: State = .checking
+    private(set) var configuration: TranslationSession.Configuration?
     private(set) var request: Request?
 
     private var generation = 0
@@ -167,7 +168,7 @@ final class LanguageSetupModel: ObservableObject {
 }
 
 struct LanguageSetupView: View {
-    @ObservedObject var model: LanguageSetupModel
+    @Bindable var model: LanguageSetupModel
     let onClose: () -> Void
 
     var body: some View {
@@ -213,9 +214,12 @@ struct LanguageSetupView: View {
         .padding(20)
         .frame(width: PermissionGuide.windowWidth)
         .fixedSize(horizontal: false, vertical: true)
-        .task { model.refresh() }
-        .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
-            model.synchronizePreferences()
+        .task {
+            model.refresh()
+            // Follow changes made from the menu bar while this window is open.
+            for await _ in NotificationCenter.default.notifications(named: UserDefaults.didChangeNotification) {
+                model.synchronizePreferences()
+            }
         }
         .onDisappear { model.cancel() }
         // @Sendable keeps the action off the main actor; see prepare(using:request:).

@@ -5,8 +5,9 @@ import Translation
 /// A hidden SwiftUI host provides sessions through translationTask,
 /// which resumes the pending continuation.
 @MainActor
-final class HostedTranslator: ObservableObject, Translator {
-    @Published fileprivate var configuration: TranslationSession.Configuration?
+@Observable
+final class HostedTranslator: Translator {
+    fileprivate var configuration: TranslationSession.Configuration?
 
     private struct Job: Sendable {
         let text: String
@@ -70,7 +71,7 @@ final class HostedTranslator: ObservableObject, Translator {
 // MARK: - Invisible host
 
 private struct TranslationHostView: View {
-    @ObservedObject var translator: HostedTranslator
+    let translator: HostedTranslator
 
     var body: some View {
         Color.clear

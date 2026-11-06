@@ -1,28 +1,37 @@
 // The App Store delivers its own updates and doesn't allow in-app updaters.
 #if !APP_STORE
 import AppKit
-import Combine
 import Sparkle
 
 @MainActor
-final class Updater: NSObject, ObservableObject, SPUUpdaterDelegate, @preconcurrency SPUStandardUserDriverDelegate {
+@Observable
+final class Updater: NSObject, SPUUpdaterDelegate, @preconcurrency SPUStandardUserDriverDelegate {
     static let shared = Updater()
 
-    @Published private(set) var canCheckForUpdates = false
-    @Published private(set) var checksAutomatically = false
-    @Published private(set) var updateAvailable = false
+    private(set) var canCheckForUpdates = false
+    private(set) var checksAutomatically = false
+    private(set) var updateAvailable = false
 
-    private var updaterController: SPUStandardUpdaterController!
+    @ObservationIgnored private var updaterController: SPUStandardUpdaterController!
+    @ObservationIgnored private var observations: [NSKeyValueObservation] = []
 
     private override init() {
         super.init()
         updaterController = SPUStandardUpdaterController(
             startingUpdater: false, updaterDelegate: self, userDriverDelegate: self
         )
-        updaterController.updater.publisher(for: \.canCheckForUpdates)
-            .assign(to: &$canCheckForUpdates)
-        updaterController.updater.publisher(for: \.automaticallyChecksForUpdates)
-            .assign(to: &$checksAutomatically)
+        // KVO callbacks aren't guaranteed to arrive on the main actor.
+        let updater = updaterController.updater
+        observations = [
+            updater.observe(\.canCheckForUpdates, options: [.initial, .new]) { [weak self] _, change in
+                guard let value = change.newValue else { return }
+                Task { @MainActor in self?.canCheckForUpdates = value }
+            },
+            updater.observe(\.automaticallyChecksForUpdates, options: [.initial, .new]) { [weak self] _, change in
+                guard let value = change.newValue else { return }
+                Task { @MainActor in self?.checksAutomatically = value }
+            },
+        ]
     }
 
     func start() {

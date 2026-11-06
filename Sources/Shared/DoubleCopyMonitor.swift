@@ -70,31 +70,31 @@ final class DoubleCopyMonitor {
         let firstCopyBaseline = changeCountAtFirstCopy
         let sourceApp = NSWorkspace.shared.frontmostApplication
 
-        func poll(_ remaining: Int) {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) { [weak self] in
-                guard let self else { return }
-                if pasteboard.changeCount != baseline || remaining == 0 {
-                    // Neither press reached the pasteboard: copy is disabled or
-                    // blocked in the source app. Read its live selection instead;
-                    // the clipboard only holds stale contents.
-                    let copyFailed = pasteboard.changeCount == firstCopyBaseline
-                    let text = copyFailed
-                        ? Self.focusedSelectedText()
-                        : pasteboard.string(forType: .string)
-                    if text != nil {
-                        self.onReadOutcome?(sourceApp, true)
-                    } else if copyFailed {
-                        self.onReadOutcome?(sourceApp, false)
-                    }
-                    if let text {
-                        self.onDoubleCopy?(text)
-                    }
-                } else {
-                    poll(remaining - 1)
-                }
+        Task { [weak self] in
+            var remaining = attemptsLeft
+            while true {
+                try? await Task.sleep(for: .milliseconds(20))
+                if pasteboard.changeCount != baseline || remaining == 0 { break }
+                remaining -= 1
+            }
+            guard let self else { return }
+
+            // Neither press reached the pasteboard: copy is disabled or
+            // blocked in the source app. Read its live selection instead;
+            // the clipboard only holds stale contents.
+            let copyFailed = pasteboard.changeCount == firstCopyBaseline
+            let text = copyFailed
+                ? Self.focusedSelectedText()
+                : pasteboard.string(forType: .string)
+            if text != nil {
+                self.onReadOutcome?(sourceApp, true)
+            } else if copyFailed {
+                self.onReadOutcome?(sourceApp, false)
+            }
+            if let text {
+                self.onDoubleCopy?(text)
             }
         }
-        poll(attemptsLeft)
     }
 
     // MARK: - Accessibility fallback

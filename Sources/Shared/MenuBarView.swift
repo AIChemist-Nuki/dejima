@@ -2,14 +2,14 @@ import AppKit
 import SwiftUI
 
 struct MenuBarView: View {
-    @ObservedObject var controller: Controller
+    let controller: Controller
     @AppStorage("primaryLanguage") private var primary = "zh-Hans"
     @AppStorage("secondaryLanguage") private var secondary = "ja"
     @AppStorage("polishWithAppleIntelligence") private var polish = false
     /// Read system status because login registration can change outside the app.
     @State private var launchAtLogin = LoginItem.isEnabled
     #if !APP_STORE
-    @ObservedObject private var updater = Updater.shared
+    private let updater = Updater.shared
     #endif
     @Environment(\.openWindow) private var openWindow
 
@@ -82,7 +82,7 @@ struct MenuBarView: View {
             openWindow(id: AboutView.windowID)
             // Bring the window forward once the menu has closed. The active app
             // may decline activation, so order the window front regardless.
-            DispatchQueue.main.async {
+            Task {
                 NSApp.activate()
                 guard let window = NSApp.windows.first(where: {
                     $0.identifier?.rawValue.hasPrefix(AboutView.windowID) == true

@@ -6,7 +6,7 @@ struct AboutView: View {
     static let windowID = "about"
 
     #if !APP_STORE
-    @ObservedObject private var updater = Updater.shared
+    private let updater = Updater.shared
     #endif
     /// Read on appear and after restoring; mutes change from result panels.
     @State private var hasMutedApps = SelectionFeedback.hasMutedApps

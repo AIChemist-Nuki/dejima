@@ -2,7 +2,8 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class ResultModel: ObservableObject {
+@Observable
+final class ResultModel {
     enum State {
         case translating
         case streaming(String)
@@ -12,11 +13,11 @@ final class ResultModel: ObservableObject {
         case feedback(SelectionFeedback.Prompt)
     }
 
-    @Published var sourceText = ""
-    @Published var state: State = .translating
-    @Published var routeLabel = ""
+    var sourceText = ""
+    var state: State = .translating
+    var routeLabel = ""
     /// Pinned panels retain their position and ignore outside clicks.
-    @Published var isPinned = false
+    var isPinned = false
 
     /// Only complete translations can be copied, including drafts being refined.
     var copyableText: String? {
