@@ -69,6 +69,8 @@ final class ResultPanel {
 
     /// Retain the initial pointer position while streaming results resize the panel.
     private var anchor: NSPoint = .zero
+    /// The frame last set by `place`; a different origin means the user dragged the panel.
+    private var placedFrame: NSRect = .zero
 
     init(model: ResultModel) {
         self.model = model
@@ -121,11 +123,11 @@ final class ResultPanel {
         let target = ResultView.Layout.height(forContent: contentHeight)
         guard abs(target - panel.frame.height) > 0.5 else { return }
 
-        guard model.isPinned else {
+        guard model.isPinned || panel.frame.origin != placedFrame.origin else {
             place(height: target)
             return
         }
-        // Keep the top edge of a pinned panel fixed when resizing.
+        // Keep the top edge of a pinned or dragged panel fixed when resizing.
         var frame = panel.frame
         frame.origin.y += frame.height - target
         frame.size.height = target
@@ -145,6 +147,7 @@ final class ResultPanel {
             origin.y = max(origin.y, visible.minY + 8)
         }
         panel.setFrame(NSRect(origin: origin, size: CGSize(width: width, height: height)), display: true)
+        placedFrame = panel.frame
     }
 
     // MARK: - Dismissal
