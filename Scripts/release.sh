@@ -8,7 +8,9 @@
 #   ./Scripts/release.sh --local 0.3.0    verify packaging without creating a tag
 #
 # Uses the release version for both CFBundleShortVersionString and CFBundleVersion.
-# Public release builds require a clean working tree. Tags are local; push separately:
+# Public release builds require a clean working tree. After a successful release,
+# the project version moves to the next patch (Scripts/bump-dev-version.sh) in a
+# new commit. Tags and commits are local; push separately:
 #
 #   git push origin main v0.3.0
 #
@@ -470,6 +472,9 @@ if [ "$LOCAL_BUILD" -eq 0 ]; then
         echo >&2
         echo "error: the DMG release is ready in $DIST, but the App Store step failed." >&2
         echo "       Fix the problem above, then retry only that step: ./Scripts/appstore.sh" >&2
+        echo "       After it succeeds, run ./Scripts/bump-dev-version.sh $VERSION" >&2
         exit 1
     }
+    echo
+    ./Scripts/bump-dev-version.sh "$VERSION"
 fi

@@ -139,7 +139,7 @@ With the release changes committed, run:
 
 Replace the version with your own. The notarization profile defaults to `dejima`; set `NOTARY_PROFILE` to use another. If exactly one valid Developer ID Application identity is installed, it is selected automatically; otherwise set `CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)"`. The version argument creates a local `vX.Y.Z` tag on HEAD after preflight checks and before building. If HEAD is already tagged, omit the argument, including when retrying a failed build. The script does not push tags or publish a GitHub release.
 
-Release versions come from the tag. The script sets both `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` to that version, so `CFBundleShortVersionString` and `CFBundleVersion` match. Sparkle compares `CFBundleVersion` to determine update order; use an increasing version for each release. The project settings supply the versions for ordinary development builds.
+Release versions come from the tag. The script sets both `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` to that version, so `CFBundleShortVersionString` and `CFBundleVersion` match. Sparkle compares `CFBundleVersion` to determine update order; use an increasing version for each release. The project settings supply the versions for ordinary development builds. After a successful release, `Scripts/bump-dev-version.sh` moves the project's `MARKETING_VERSION` to the next patch version and commits it, unless the project is already newer. If the App Store step fails, run `./Scripts/bump-dev-version.sh X.Y.Z` yourself after `./Scripts/appstore.sh` succeeds.
 
 The script replaces `build/release`, archives and exports the app, verifies its Developer ID signature, notarizes the DMG and staples the tickets, then signs and verifies the update feed and archive. Successful packaging produces three files in `dist`:
 
@@ -149,7 +149,7 @@ The script replaces `build/release`, archives and exports the app, verifies its 
 | `Dejima-<version>.zip` | App update archive |
 | `appcast.xml` | Signed update feed |
 
-Push the tag and upload all three files to the same GitHub release as a separate publishing step. The app reads the latest release's feed, whose archive link points to the matching versioned release download. Upload the complete set before publishing the release.
+Push `main` and the tag (`git push origin main vX.Y.Z`) and upload all three files to the same GitHub release as a separate publishing step. The app reads the latest release's feed, whose archive link points to the matching versioned release download. Upload the complete set before publishing the release.
 
 The DMG contains `Dejima.app`, an Applications shortcut, and a Read Me. The window background and Read Me are written in English, Simplified Chinese, Japanese, and Korean.
 
