@@ -98,7 +98,18 @@ SPARKLE_BIN="$SOURCE_PACKAGES/artifacts/sparkle/Sparkle/bin"
 SPARKLE_KEY_ACCOUNT="${SPARKLE_KEY_ACCOUNT:-com.nuki.Dejima}"
 RELEASE_URL="https://github.com/AIChemist-Nuki/dejima/releases/download/v$VERSION"
 
-if [ "$LOCAL_BUILD" -eq 0 ]; then
+if [ "$LOCAL_BUILD" -eq 1 ]; then
+    # Ad-hoc signatures change with every build, which revokes Accessibility access;
+    # an Apple Development identity keeps it across local builds.
+    LOCAL_IDENTITY=$(security find-identity -v -p codesigning | sed -nE \
+        's/^[[:space:]]*[0-9]+\) ([[:xdigit:]]{40}) "(Apple Development:.*)"$/\1\t\2/p' | sort -u | head -1)
+    if [ -n "$LOCAL_IDENTITY" ]; then
+        IFS=$'\t' read -r CODE_SIGN_IDENTITY SIGNING_NAME <<< "$LOCAL_IDENTITY"
+    else
+        CODE_SIGN_IDENTITY=-
+        SIGNING_NAME=ad-hoc
+    fi
+else
     NOTARY_PROFILE="${NOTARY_PROFILE:-dejima}"
     identities=$(security find-identity -v -p codesigning | sed -nE \
         's/^[[:space:]]*[0-9]+\) ([[:xdigit:]]{40}) "(Developer ID Application:.*)"$/\1\t\2/p' | sort -u)
@@ -191,7 +202,7 @@ args=(
     "CURRENT_PROJECT_VERSION=$VERSION"
 )
 if [ "$LOCAL_BUILD" -eq 1 ]; then
-    args+=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=
+    args+=(CODE_SIGN_STYLE=Manual "CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY" DEVELOPMENT_TEAM=
         OTHER_CODE_SIGN_FLAGS=--timestamp=none CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO
         ENABLE_HARDENED_RUNTIME=NO)
     action=build
@@ -226,7 +237,7 @@ ICON="$APP/Contents/Resources/AppIcon.icns"
 
 codesign --verify --strict --deep "$APP"
 if [ "$LOCAL_BUILD" -eq 1 ]; then
-    echo "    signature: ad-hoc (local verification)"
+    echo "    signature: $SIGNING_NAME (local verification)"
 else
     signing_details=$(codesign -dvv "$APP" 2>&1)
     printf '%s\n' "$signing_details" | grep -Fqx "Authority=$SIGNING_NAME" || {
@@ -443,7 +454,7 @@ done
 
 if [ "$LOCAL_BUILD" -eq 1 ]; then
     echo
-    echo "Local verification only: ad-hoc signed, hardened runtime disabled, and not notarized."
+    echo "Local verification only: signed by $SIGNING_NAME, hardened runtime disabled, and not notarized."
     echo "No tag or public update feed was created. Do not publish these local packages."
 fi
 

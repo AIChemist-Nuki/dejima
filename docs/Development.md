@@ -16,6 +16,12 @@ open Dejima.xcodeproj
 
 In the target's **Signing & Capabilities** settings, choose your team or **Sign to Run Locally**. Use a consistent signing identity when testing Accessibility access; changing signatures or app copies can require granting access again.
 
+Debug builds use the bundle ID `com.nuki.Dejima.debug`, so their Accessibility access and preferences stay separate from an installed release. To start over, reset the permission instead of removing it in System Settings:
+
+```bash
+tccutil reset Accessibility com.nuki.Dejima.debug
+```
+
 Run the `Dejima` scheme in Xcode, or build from the command line after configuring signing:
 
 ```bash
@@ -113,7 +119,7 @@ To test packaging with uncommitted changes:
 ./Scripts/release.sh --local 0.3.0
 ```
 
-This builds the app with ad-hoc signing in `build/local` and creates a `-local.dmg` and a `-local.zip` archive in `dist`. It does not create tags, notarize, update provisioning assets, or generate update feeds. These packages are for local testing and must not be published as production updates.
+This builds the app in `build/local`, signed with an installed Apple Development identity (or ad-hoc if none is available, which loses Accessibility access on every build), and creates a `-local.dmg` and a `-local.zip` archive in `dist`. It does not create tags, notarize, update provisioning assets, or generate update feeds. These packages are for local testing and must not be published as production updates.
 
 ## Package a release
 
