@@ -36,8 +36,8 @@ final class Controller {
         hub.start()
         panel = ResultPanel(model: result)
 
-        monitor.onDoubleCopy = { [weak self] text in
-            self?.handle(text)
+        monitor.onDoubleCopy = { [weak self] text, selection in
+            self?.handle(text, selection: selection)
         }
         monitor.onReadOutcome = { [weak self] app, succeeded in
             self?.recordRead(in: app, succeeded: succeeded)
@@ -103,7 +103,7 @@ final class Controller {
 
     // MARK: - Translation flow
 
-    private func handle(_ text: String) {
+    private func handle(_ text: String, selection: NSRect?) {
         // Normalize PDF line wraps before detection, translation, and display.
         let trimmed = TextCleaner.unwrap(text).trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
@@ -114,7 +114,7 @@ final class Controller {
 
         let route = LanguageRouter.route(for: trimmed)
         result.begin(source: trimmed, route: route)
-        panel?.show(near: NSEvent.mouseLocation)
+        panel?.show(near: NSEvent.mouseLocation, avoiding: selection)
 
         guard let route else {
             result.fail(DejimaError.noRoute)

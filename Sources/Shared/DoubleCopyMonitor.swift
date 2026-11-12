@@ -4,7 +4,9 @@ import AppKit
 /// Global key monitoring requires Accessibility access.
 @MainActor
 final class DoubleCopyMonitor {
-    var onDoubleCopy: ((String) -> Void)?
+    /// Reports the copied text and, when the source app exposes it, the
+    /// selection's bounds in AppKit screen coordinates.
+    var onDoubleCopy: ((_ text: String, _ selection: NSRect?) -> Void)?
     /// Reports whether a double copy yielded text, along with the source app.
     /// Copies of non-text content (images, files) are not reported.
     var onReadOutcome: ((_ app: NSRunningApplication?, _ succeeded: Bool) -> Void)?
@@ -92,7 +94,7 @@ final class DoubleCopyMonitor {
                 self.onReadOutcome?(sourceApp, false)
             }
             if let text {
-                self.onDoubleCopy?(text)
+                self.onDoubleCopy?(text, Self.focusedSelectionBounds())
             }
         }
     }
@@ -144,13 +146,58 @@ final class DoubleCopyMonitor {
     /// Static web content (WebKit and Chromium) reports its selection as a
     /// text marker range rather than through AXSelectedText.
     private static func webSelectedText(_ element: AXUIElement) -> String? {
-        var range: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(element, "AXSelectedTextMarkerRange" as CFString, &range) == .success,
-              let range else { return nil }
+        guard let range = copyValue(element, "AXSelectedTextMarkerRange") else { return nil }
         var value: CFTypeRef?
         guard AXUIElementCopyParameterizedAttributeValue(element, "AXStringForTextMarkerRange" as CFString,
                                                          range, &value) == .success else { return nil }
         return value as? String
+    }
+
+    // MARK: - Selection bounds
+
+    /// Reads the bounds of the frontmost app's selection so the result panel can avoid covering it.
+    private static func focusedSelectionBounds() -> NSRect? {
+        guard let (_, app) = frontmostAppElement(),
+              let element = copyElement(app, kAXFocusedUIElementAttribute),
+              let primary = NSScreen.screens.first else { return nil }
+
+        let bounds = textBounds(element)
+            ?? webBounds(element)
+            ?? webArea(containing: element).flatMap(webBounds)
+        guard let bounds else { return nil }
+        // Accessibility uses a top-left origin on the primary screen; AppKit uses bottom-left.
+        return NSRect(x: bounds.minX, y: primary.frame.maxY - bounds.maxY,
+                      width: bounds.width, height: bounds.height)
+    }
+
+    private static func textBounds(_ element: AXUIElement) -> CGRect? {
+        guard let range = copyValue(element, kAXSelectedTextRangeAttribute) else { return nil }
+        return copyRect(element, kAXBoundsForRangeParameterizedAttribute, range)
+    }
+
+    private static func webBounds(_ element: AXUIElement) -> CGRect? {
+        guard let range = copyValue(element, "AXSelectedTextMarkerRange") else { return nil }
+        return copyRect(element, "AXBoundsForTextMarkerRange", range)
+    }
+
+    /// Returns a non-empty rectangle; collapsed selections report zero-sized bounds.
+    private static func copyRect(_ element: AXUIElement, _ attribute: String, _ parameter: CFTypeRef) -> CGRect? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyParameterizedAttributeValue(element, attribute as CFString, parameter, &value) == .success,
+              let value, CFGetTypeID(value) == AXValueGetTypeID() else { return nil }
+        var rect = CGRect.zero
+        // Safe: the type ID was checked above.
+        guard AXValueGetValue(value as! AXValue, .cgRect, &rect),
+              rect.width > 0, rect.height > 0 else { return nil }
+        return rect
+    }
+
+    // MARK: - Attribute helpers
+
+    private static func copyValue(_ element: AXUIElement, _ attribute: String) -> CFTypeRef? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success else { return nil }
+        return value
     }
 
     private static func copyElement(_ element: AXUIElement, _ attribute: String) -> AXUIElement? {

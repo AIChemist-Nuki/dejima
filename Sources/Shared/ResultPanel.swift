@@ -69,6 +69,10 @@ final class ResultPanel {
 
     /// Retain the initial pointer position while streaming results resize the panel.
     private var anchor: NSPoint = .zero
+    /// The selected text to keep uncovered, or nil to follow the pointer.
+    private var selection: NSRect?
+    /// Chosen once per result so streaming growth doesn't flip the panel across the selection.
+    private var placesBelowSelection = true
     /// The frame last set by `place`; a different origin means the user dragged the panel.
     private var placedFrame: NSRect = .zero
 
@@ -101,9 +105,10 @@ final class ResultPanel {
         ))
     }
 
-    func show(near point: NSPoint) {
+    func show(near point: NSPoint, avoiding selection: NSRect? = nil) {
         if !model.isPinned {
             anchor = point
+            chooseSide(for: selection)
             place(height: panel.frame.height)
         }
         panel.orderFrontRegardless()
@@ -134,12 +139,40 @@ final class ResultPanel {
         panel.setFrame(frame, display: true)
     }
 
-    /// Place the panel beside the anchor, constrained to that screen's visible area.
+    private static let gap: CGFloat = 8
+
+    /// Prefer the space below the selection, as Look Up does, unless more room is above.
+    /// Selections too tall to leave room on either side fall back to the pointer.
+    private func chooseSide(for selection: NSRect?) {
+        self.selection = nil
+        // Ignore bounds that don't land on a screen; some apps report bogus coordinates.
+        guard let selection,
+              let visible = NSScreen.screens.first(where: {
+                  $0.frame.contains(NSPoint(x: selection.midX, y: selection.midY))
+              })?.visibleFrame
+        else { return }
+
+        let below = selection.minY - visible.minY - Self.gap * 2
+        let above = visible.maxY - selection.maxY - Self.gap * 2
+        guard max(below, above) >= ResultView.Layout.minHeight else { return }
+        self.selection = selection
+        placesBelowSelection = below >= ResultView.Layout.maxHeight || below >= above
+    }
+
+    /// Place the panel beside the selection or pointer, constrained to that screen's visible area.
     private func place(height: CGFloat) {
         let width = ResultView.Layout.width
-        var origin = NSPoint(x: anchor.x + 12, y: anchor.y - 12 - height)
+        var origin: NSPoint
+        let screen: NSScreen?
+        if let selection {
+            origin = NSPoint(x: selection.minX,
+                             y: placesBelowSelection ? selection.minY - Self.gap - height : selection.maxY + Self.gap)
+            screen = self.screen(containing: NSPoint(x: selection.midX, y: selection.midY))
+        } else {
+            origin = NSPoint(x: anchor.x + 12, y: anchor.y - 12 - height)
+            screen = self.screen(containing: anchor)
+        }
 
-        let screen = NSScreen.screens.first { $0.frame.contains(anchor) } ?? NSScreen.main
         if let visible = screen?.visibleFrame {
             origin.x = min(origin.x, visible.maxX - width - 8)
             origin.x = max(origin.x, visible.minX + 8)
@@ -148,6 +181,10 @@ final class ResultPanel {
         }
         panel.setFrame(NSRect(origin: origin, size: CGSize(width: width, height: height)), display: true)
         placedFrame = panel.frame
+    }
+
+    private func screen(containing point: NSPoint) -> NSScreen? {
+        NSScreen.screens.first { $0.frame.contains(point) } ?? NSScreen.main
     }
 
     // MARK: - Dismissal
